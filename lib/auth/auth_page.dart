@@ -26,9 +26,12 @@ class _AuthPageState extends State<AuthPage> {
       final email = _emailController.text;
       final password = _passwordController.text;
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Login berhasil $email'), backgroundColor: Colors.green,));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Login berhasil $email'),
+          backgroundColor: Colors.green,
+        ),
+      );
     }
   }
 
@@ -36,7 +39,17 @@ class _AuthPageState extends State<AuthPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('BUBA | Welcome'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('BUBA | Login', style: TextStyle(fontWeight: FontWeight.bold)),
+            SizedBox(height: 4,),
+            Text(
+              'by : Najatif_2026',
+              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+            ),
+          ],
+        ),
         backgroundColor: Colors.blue,
         titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
       ),
@@ -119,8 +132,8 @@ class _AuthPageState extends State<AuthPage> {
                   backgroundColor: Colors.blue,
                   padding: EdgeInsets.symmetric(vertical: 20),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)
-                  )
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 child: Text(
                   'LOGIN',
