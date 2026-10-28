@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'auth/auth_page.dart';
-import 'siswa/quis/quis.dart';
 
 // import 'siswa/splash.dart';
 // import 'siswa/selectContent.dart';
