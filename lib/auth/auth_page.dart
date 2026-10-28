@@ -55,12 +55,22 @@ class _AuthPageState extends State<AuthPage> {
       ),
 
       body: SafeArea(
+  
         child: Form(
           key: _formKey,
           child: ListView(
             padding: EdgeInsets.all(24.0),
             children: [
               SizedBox(height: 20),
+
+              Center(
+                child: Image.asset(
+                  'assets/images/logoBuba.png'
+                ),
+              ),
+
+              SizedBox(height: 10),
+
               Text(
                 'Masuk ke akun',
                 style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
