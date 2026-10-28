@@ -3,32 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:audioplayers/audioplayers.dart';
 import 'dart:convert';
 
-void main() {
-  runApp(const MyApp());
-}
-
 const String baseUrl = 'http://127.0.0.1:8000';
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Kuis BUBA',
-      theme: ThemeData(
-        useMaterial3: true,
-        fontFamily: 'Arial',
-        scaffoldBackgroundColor: const Color(0xFFFFF8EE),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1E60BE),
-        ),
-      ),
-      home: const HalamanKuis(),
-    );
-  }
-}
 
 class HalamanKuis extends StatefulWidget {
   const HalamanKuis({super.key});

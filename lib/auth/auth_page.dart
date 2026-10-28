@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../siswa/quis/quis.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -23,13 +24,10 @@ class _AuthPageState extends State<AuthPage> {
 
   void _handleLogin() {
     if (_formKey.currentState!.validate()) {
-      final email = _emailController.text;
-      final password = _passwordController.text;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Login berhasil $email'),
-          backgroundColor: Colors.green,
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const HalamanKuis(),
         ),
       );
     }
@@ -42,41 +40,48 @@ class _AuthPageState extends State<AuthPage> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('BUBA | Login', style: TextStyle(fontWeight: FontWeight.bold)),
-            SizedBox(height: 4,),
-            Text(
+            const Text(
+              'BUBA | Login',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            const Text(
               'by : Najatif_2026',
               style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
             ),
           ],
         ),
         backgroundColor: Colors.blue,
-        titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
+        titleTextStyle: const TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+        ),
       ),
-
       body: SafeArea(
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: EdgeInsets.all(24.0),
+            padding: const EdgeInsets.all(24.0),
             children: [
-              SizedBox(height: 20),
-              Text(
+              const SizedBox(height: 20),
+              const Text(
                 'Masuk ke akun',
-                style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-
-              SizedBox(height: 8),
-              Text(
+              const SizedBox(height: 8),
+              const Text(
                 'Silahkan login sebelum melanjutkan',
                 style: TextStyle(color: Colors.grey),
               ),
-              SizedBox(height: 32),
+              const SizedBox(height: 32),
 
               TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Email',
                   hintText: 'juvePCX@example.com',
                   prefixIcon: Icon(Icons.email_outlined),
@@ -92,7 +97,7 @@ class _AuthPageState extends State<AuthPage> {
                   return null;
                 },
               ),
-              SizedBox(height: 32),
+              const SizedBox(height: 32),
 
               TextFormField(
                 controller: _passwordController,
@@ -100,7 +105,7 @@ class _AuthPageState extends State<AuthPage> {
                 decoration: InputDecoration(
                   labelText: 'Password',
                   hintText: '*****',
-                  prefixIcon: Icon(Icons.password_outlined),
+                  prefixIcon: const Icon(Icons.password_outlined),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _isPasswordObsecured
@@ -124,18 +129,18 @@ class _AuthPageState extends State<AuthPage> {
                   return null;
                 },
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
 
               ElevatedButton(
                 onPressed: _handleLogin,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
-                  padding: EdgeInsets.symmetric(vertical: 20),
+                  padding: const EdgeInsets.symmetric(vertical: 20),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: Text(
+                child: const Text(
                   'LOGIN',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
