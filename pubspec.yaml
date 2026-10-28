@@ -10,7 +10,11 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^1.6.0
+<<<<<<< HEAD
+  shared_preferences: ^2.5.6
+=======
   audioplayers: ^6.1.0
+>>>>>>> 63368620ed87b3e9a0b47e0ee1d1642a90e16d5b
 
 dev_dependencies:
   flutter_test:
@@ -20,5 +24,10 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   
+<<<<<<< HEAD
+  assets: 
+    - assets/images/
+=======
   assets:
     - assets/images/backgroundSplash.png
+>>>>>>> 63368620ed87b3e9a0b47e0ee1d1642a90e16d5b
