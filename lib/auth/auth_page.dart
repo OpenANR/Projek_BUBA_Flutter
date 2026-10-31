@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../siswa/quis/quis.dart';
+
+import '../services/auth_services.dart';
+import '../siswa/splash.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -14,6 +16,8 @@ class _AuthPageState extends State<AuthPage> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool _isPasswordObsecured = true;
+  bool _isLoading = false;
+  final AuthServices _authServices = AuthServices();
 
   @override
   void dispose() {
@@ -22,13 +26,27 @@ class _AuthPageState extends State<AuthPage> {
     super.dispose();
   }
 
-  void _handleLogin() {
-    if (_formKey.currentState!.validate()) {
+  Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    final error = await _authServices.login(
+      _emailController.text.trim(),
+      _passwordController.text,
+    );
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (error == null) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const HalamanKuis(),
-        ),
+        MaterialPageRoute(builder: (context) => const SplashPage()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: Colors.red),
       );
     }
   }
@@ -52,13 +70,9 @@ class _AuthPageState extends State<AuthPage> {
           ],
         ),
         backgroundColor: Colors.blue,
-        titleTextStyle: const TextStyle(
-          color: Colors.white,
-          fontSize: 20,
-        ),
+        titleTextStyle: const TextStyle(color: Colors.white, fontSize: 20),
       ),
       body: SafeArea(
-  
         child: Form(
           key: _formKey,
           child: ListView(
@@ -66,20 +80,13 @@ class _AuthPageState extends State<AuthPage> {
             children: [
               SizedBox(height: 20),
 
-              Center(
-                child: Image.asset(
-                  'assets/images/logoBuba.png'
-                ),
-              ),
+              Center(child: Image.asset('assets/images/logoBuba.png')),
 
               SizedBox(height: 10),
 
               Text(
                 'Masuk ke akun',
-                style: TextStyle(
-                  fontSize: 25,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -142,7 +149,7 @@ class _AuthPageState extends State<AuthPage> {
               const SizedBox(height: 24),
 
               ElevatedButton(
-                onPressed: _handleLogin,
+                onPressed: _isLoading ? null : _handleLogin,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   padding: const EdgeInsets.symmetric(vertical: 20),
@@ -150,14 +157,23 @@ class _AuthPageState extends State<AuthPage> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text(
-                  'LOGIN',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: Colors.white,
-                  ),
-                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        'LOGIN',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
             ],
           ),
