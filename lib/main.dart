@@ -6,11 +6,11 @@ import 'auth/auth_page.dart';
 // import 'siswa/selectContent.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(const BubaApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class BubaApp extends StatelessWidget {
+  const BubaApp({super.key});
 
   @override
   Widget build(BuildContext context) {
