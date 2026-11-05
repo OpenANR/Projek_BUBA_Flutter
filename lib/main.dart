@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:buba_projek/siswa/select_class.dart';
+import 'auth/auth_page.dart';
+
+// import 'siswa/splash.dart';
+// import 'siswa/selectContent.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(const BubaApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class BubaApp extends StatelessWidget {
+  const BubaApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: SelectClassPage(),
-    );
+    return const MaterialApp(home: AuthPage());
   }
 }
