@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'siswa/materi/materi.dart'; // Menghubungkan file materi.dart
 
 void main() {
-  runApp(const MainApp());
+  runApp(const BubaApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class BubaApp extends StatelessWidget {
+  const BubaApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: Scaffold(body: Center(child: Text('Hello World!'))),
+      debugShowCheckedModeBanner: false,
+      home: MateriPage(), // Membuka halaman materi
     );
   }
 }
