@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import 'siswa/materi/materi.dart'; // Menghubungkan file materi.dart
+
+import 'auth/auth_page.dart';
+
+// import 'siswa/splash.dart';
+// import 'siswa/selectContent.dart';
 
 void main() {
   runApp(const BubaApp());
@@ -10,9 +14,6 @@ class BubaApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: MateriPage(), // Membuka halaman materi
-    );
+    return const MaterialApp(home: AuthPage());
   }
 }
