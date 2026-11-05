@@ -42,6 +42,7 @@ class _QuisPageState extends State<QuisPage> {
     super.dispose();
   }
 
+  // Memutar audio pertanyaan atau pilihan.
   Future<void> putarAudio(String? url) async {
     if (url == null || url.isEmpty) return;
 
@@ -59,12 +60,14 @@ class _QuisPageState extends State<QuisPage> {
     }
   }
 
+  // Menyimpan jawaban siswa.
   void pilihJawaban(String pilihan) {
     setState(() {
       jawabanSiswa[soal.id] = pilihan;
     });
   }
 
+  // Berpindah ke soal selanjutnya.
   void soalSelanjutnya() {
     if (nomorSoal < widget.daftarKuis.length - 1) {
       setState(() {
@@ -73,6 +76,7 @@ class _QuisPageState extends State<QuisPage> {
     }
   }
 
+  // Kembali ke soal sebelumnya.
   void soalSebelumnya() {
     if (nomorSoal > 0) {
       setState(() {
@@ -81,61 +85,45 @@ class _QuisPageState extends State<QuisPage> {
     }
   }
 
+  // Konfirmasi sebelum mengumpulkan jawaban.
   Future<void> konfirmasiSelesai() async {
     final belumDijawab = widget.daftarKuis
         .where((item) => !jawabanSiswa.containsKey(item.id))
         .length;
 
-    if (belumDijawab > 0) {
-      final lanjut = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Soal belum selesai'),
-          content: Text(
-            'Masih ada $belumDijawab soal yang belum dijawab. '
-            'Apakah kamu tetap ingin mengumpulkan jawaban?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Kembali'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Tetap Kirim'),
-            ),
-          ],
+    final lanjut = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          belumDijawab > 0
+              ? 'Soal belum selesai'
+              : 'Selesaikan Kuis?',
         ),
-      );
-
-      if (lanjut != true) return;
-    } else {
-      final lanjut = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Selesaikan Kuis?'),
-          content: const Text(
-            'Apakah kamu yakin ingin mengirim semua jawaban?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Periksa Lagi'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Ya, Selesai'),
-            ),
-          ],
+        content: Text(
+          belumDijawab > 0
+              ? 'Masih ada $belumDijawab soal yang belum dijawab. '
+                  'Apakah kamu tetap ingin mengumpulkan jawaban?'
+              : 'Apakah kamu yakin ingin mengirim semua jawaban?',
         ),
-      );
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Periksa Lagi'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Ya, Selesai'),
+          ),
+        ],
+      ),
+    );
 
-      if (lanjut != true) return;
-    }
+    if (lanjut != true) return;
 
     await kirimJawaban();
   }
 
+  // Mengirim jawaban ke Laravel API.
   Future<void> kirimJawaban() async {
     if (jawabanSiswa.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -186,6 +174,7 @@ class _QuisPageState extends State<QuisPage> {
     }
   }
 
+  // Widget pilihan jawaban.
   Widget pilihanJawaban({
     required String kode,
     required String teks,
@@ -194,16 +183,20 @@ class _QuisPageState extends State<QuisPage> {
     final dipilih = jawabanSiswa[soal.id] == kode;
 
     return InkWell(
-      onTap: () => pilihJawaban(kode),
+      onTap: isSubmitting ? null : () => pilihJawaban(kode),
       borderRadius: BorderRadius.circular(14),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-          color: dipilih ? const Color(0xFFE8F1FF) : Colors.white,
+          color: dipilih
+              ? const Color(0xFFE8F1FF)
+              : Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: dipilih ? Colors.blue : Colors.grey.shade300,
+            color: dipilih
+                ? Colors.blue
+                : Colors.grey.shade300,
             width: dipilih ? 2 : 1,
           ),
         ),
@@ -214,14 +207,18 @@ class _QuisPageState extends State<QuisPage> {
               width: 38,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: dipilih ? Colors.blue : Colors.grey.shade100,
+                color: dipilih
+                    ? Colors.blue
+                    : Colors.grey.shade100,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
                 kode,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: dipilih ? Colors.white : Colors.black87,
+                  color: dipilih
+                      ? Colors.white
+                      : Colors.black87,
                 ),
               ),
             ),
@@ -254,6 +251,7 @@ class _QuisPageState extends State<QuisPage> {
     );
   }
 
+  // Menampilkan gambar soal.
   Widget gambarSoal() {
     if (soal.gambarUrls.isEmpty) {
       return const SizedBox.shrink();
@@ -281,7 +279,9 @@ class _QuisPageState extends State<QuisPage> {
                   return const SizedBox(
                     height: 100,
                     child: Center(
-                      child: Text('Gambar tidak dapat dimuat'),
+                      child: Text(
+                        'Gambar tidak dapat dimuat',
+                      ),
                     ),
                   );
                 },
@@ -293,6 +293,7 @@ class _QuisPageState extends State<QuisPage> {
     );
   }
 
+  // Progress pengerjaan kuis.
   Widget progressSoal() {
     final total = widget.daftarKuis.length;
     final terjawab = jawabanSiswa.length;
@@ -311,7 +312,9 @@ class _QuisPageState extends State<QuisPage> {
             children: [
               const Text(
                 'Progress Pengerjaan',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               Text(
                 '$terjawab / $total',
@@ -337,51 +340,59 @@ class _QuisPageState extends State<QuisPage> {
     );
   }
 
+  // Navigasi nomor soal.
   Widget navigasiNomorSoal() {
     return Wrap(
       spacing: 9,
       runSpacing: 9,
-      children: List.generate(widget.daftarKuis.length, (index) {
-        final item = widget.daftarKuis[index];
-        final aktif = index == nomorSoal;
-        final terjawab = jawabanSiswa.containsKey(item.id);
+      children: List.generate(
+        widget.daftarKuis.length,
+        (index) {
+          final item = widget.daftarKuis[index];
+          final aktif = index == nomorSoal;
+          final terjawab = jawabanSiswa.containsKey(item.id);
 
-        return InkWell(
-          onTap: () {
-            setState(() {
-              nomorSoal = index;
-            });
-          },
-          borderRadius: BorderRadius.circular(9),
-          child: Container(
-            width: 42,
-            height: 42,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: aktif
-                  ? Colors.blue
-                  : terjawab
-                      ? Colors.green.shade100
-                      : Colors.white,
-              borderRadius: BorderRadius.circular(9),
-              border: Border.all(
-                color: aktif ? Colors.blue : Colors.grey.shade300,
-              ),
-            ),
-            child: Text(
-              '${index + 1}',
-              style: TextStyle(
+          return InkWell(
+            onTap: isSubmitting
+                ? null
+                : () {
+                    setState(() {
+                      nomorSoal = index;
+                    });
+                  },
+            borderRadius: BorderRadius.circular(9),
+            child: Container(
+              width: 42,
+              height: 42,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
                 color: aktif
-                    ? Colors.white
+                    ? Colors.blue
                     : terjawab
-                        ? Colors.green.shade800
-                        : Colors.black87,
-                fontWeight: FontWeight.bold,
+                        ? Colors.green.shade100
+                        : Colors.white,
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(
+                  color: aktif
+                      ? Colors.blue
+                      : Colors.grey.shade300,
+                ),
+              ),
+              child: Text(
+                '${index + 1}',
+                style: TextStyle(
+                  color: aktif
+                      ? Colors.white
+                      : terjawab
+                          ? Colors.green.shade800
+                          : Colors.black87,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
-        );
-      }),
+          );
+        },
+      ),
     );
   }
 
@@ -389,7 +400,9 @@ class _QuisPageState extends State<QuisPage> {
   Widget build(BuildContext context) {
     if (widget.daftarKuis.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Kuis')),
+        appBar: AppBar(
+          title: const Text('Kuis'),
+        ),
         body: const Center(
           child: Text('Tidak ada soal tersedia.'),
         ),
@@ -405,7 +418,9 @@ class _QuisPageState extends State<QuisPage> {
           foregroundColor: Colors.white,
           title: Text(
             'Kuis ${widget.namaKategori}',
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         body: Stack(
@@ -416,6 +431,7 @@ class _QuisPageState extends State<QuisPage> {
                 progressSoal(),
                 const SizedBox(height: 20),
 
+                // Kartu pertanyaan.
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
@@ -426,7 +442,8 @@ class _QuisPageState extends State<QuisPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment:
+                            MainAxisAlignment.spaceBetween,
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -446,7 +463,8 @@ class _QuisPageState extends State<QuisPage> {
                             ),
                           ),
                           Text(
-                            'Soal ${nomorSoal + 1} dari ${widget.daftarKuis.length}',
+                            'Soal ${nomorSoal + 1} '
+                            'dari ${widget.daftarKuis.length}',
                             style: const TextStyle(
                               color: Colors.grey,
                               fontSize: 12,
@@ -455,7 +473,6 @@ class _QuisPageState extends State<QuisPage> {
                         ],
                       ),
                       const SizedBox(height: 20),
-
                       const Text(
                         'PERTANYAAN',
                         style: TextStyle(
@@ -465,7 +482,6 @@ class _QuisPageState extends State<QuisPage> {
                         ),
                       ),
                       const SizedBox(height: 10),
-
                       Text(
                         soal.pertanyaan,
                         style: const TextStyle(
@@ -474,8 +490,8 @@ class _QuisPageState extends State<QuisPage> {
                           height: 1.5,
                         ),
                       ),
-
-                      if (soal.audioPertanyaanUrl != null)
+                      if (soal.audioPertanyaanUrl != null &&
+                          soal.audioPertanyaanUrl!.isNotEmpty)
                         Align(
                           alignment: Alignment.centerLeft,
                           child: TextButton.icon(
@@ -483,7 +499,9 @@ class _QuisPageState extends State<QuisPage> {
                               soal.audioPertanyaanUrl,
                             ),
                             icon: const Icon(Icons.volume_up),
-                            label: const Text('Dengarkan pertanyaan'),
+                            label: const Text(
+                              'Dengarkan pertanyaan',
+                            ),
                           ),
                         ),
                     ],
@@ -493,6 +511,7 @@ class _QuisPageState extends State<QuisPage> {
                 const SizedBox(height: 14),
                 gambarSoal(),
 
+                // Pilihan jawaban.
                 Container(
                   padding: const EdgeInsets.all(17),
                   decoration: BoxDecoration(
@@ -511,7 +530,6 @@ class _QuisPageState extends State<QuisPage> {
                         ),
                       ),
                       const SizedBox(height: 15),
-
                       pilihanJawaban(
                         kode: 'A',
                         teks: soal.pilihanA,
@@ -538,6 +556,7 @@ class _QuisPageState extends State<QuisPage> {
 
                 const SizedBox(height: 18),
 
+                // Nomor soal.
                 Container(
                   padding: const EdgeInsets.all(17),
                   decoration: BoxDecoration(
@@ -562,16 +581,21 @@ class _QuisPageState extends State<QuisPage> {
 
                 const SizedBox(height: 22),
 
+                // Tombol navigasi.
                 Row(
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: nomorSoal > 0
+                        onPressed: nomorSoal > 0 && !isSubmitting
                             ? soalSebelumnya
                             : null,
                         style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          side: const BorderSide(color: Colors.blue),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 15,
+                          ),
+                          side: const BorderSide(
+                            color: Colors.blue,
+                          ),
                         ),
                         child: const Text('Sebelumnya'),
                       ),
@@ -579,14 +603,18 @@ class _QuisPageState extends State<QuisPage> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: nomorSoal <
-                                widget.daftarKuis.length - 1
-                            ? soalSelanjutnya
-                            : konfirmasiSelesai,
+                        onPressed: isSubmitting
+                            ? null
+                            : nomorSoal <
+                                    widget.daftarKuis.length - 1
+                                ? soalSelanjutnya
+                                : konfirmasiSelesai,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 15,
+                          ),
                         ),
                         child: Text(
                           nomorSoal < widget.daftarKuis.length - 1
@@ -602,6 +630,7 @@ class _QuisPageState extends State<QuisPage> {
               ],
             ),
 
+            // Loading ketika mengirim jawaban.
             if (isSubmitting)
               Container(
                 color: Colors.black38,
