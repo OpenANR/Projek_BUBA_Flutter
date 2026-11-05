@@ -5,8 +5,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'dart:convert';
 
 import '../../models/kelas_model.dart';
-
-const String baseUrl = 'http://127.0.0.1:8000';
+import '../../services/auth_services.dart';
 
 class HalamanKuis extends StatefulWidget {
   const HalamanKuis({super.key, this.kelas});
@@ -73,7 +72,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
 
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/api/siswa/kuis/pilih-kelas'),
+        Uri.parse('${AuthServices.baseUrl}/siswa/kuis/pilih-kelas'),
       );
 
       if (response.statusCode != 200) {
@@ -112,7 +111,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
       final namaKelas = Uri.encodeComponent(kelas['nama_kelas'].toString());
 
       final response = await http.get(
-        Uri.parse('$baseUrl/api/siswa/kuis/$namaKelas'),
+        Uri.parse('${AuthServices.baseUrl}/siswa/kuis/$namaKelas'),
       );
 
       if (response.statusCode != 200) {
@@ -154,7 +153,9 @@ class _HalamanKuisState extends State<HalamanKuis> {
       final idKategori = kategori['id'];
 
       final response = await http.get(
-        Uri.parse('$baseUrl/api/siswa/kuis/kuis-list/$idKelas/$idKategori'),
+        Uri.parse(
+          '${AuthServices.baseUrl}/siswa/kuis/kuis-list/$idKelas/$idKategori',
+        ),
       );
 
       if (response.statusCode != 200) {
@@ -200,7 +201,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
 
       final response = await http.get(
         Uri.parse(
-          '$baseUrl/api/siswa/kuis/kuis-show/'
+          '${AuthServices.baseUrl}/siswa/kuis/kuis-show/'
           '$idKelas/$idKategori/$kodeKuis',
         ),
       );
