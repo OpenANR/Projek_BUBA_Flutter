@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 
 class AuthServices {
-  static const String baseUrl = 'http://100.91.94.82:8000/api';
+  static const String baseUrl = 'http://0.0.0.0:8000/api';
 
   Future<String?> login(String email, String password) async {
     try {
@@ -20,10 +20,16 @@ class AuthServices {
         body: jsonEncode({'email': email, 'password': password}),
       );
 
-      final data = jsonDecode(response.body);
-
       if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is! Map<String, dynamic>) {
+          return 'Format respons login dari server tidak valid.';
+        }
+        final data = decoded;
         final token = data['token'] ?? data['access_token'];
+        if (token is! String || token.isEmpty) {
+          return 'Token login tidak ditemukan dalam respons server.';
+        }
         final userData = data['user'];
 
         final prefs = await SharedPreferences.getInstance();
@@ -35,9 +41,20 @@ class AuthServices {
         }
 
         return null;
-      } else {
-        return data['message'] ?? 'Login gagal';
       }
+
+      try {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map<String, dynamic> && decoded['message'] != null) {
+          return decoded['message'].toString();
+        }
+      } on FormatException {
+        return 'Login gagal (HTTP ${response.statusCode}). Periksa alamat dan port server API.';
+      }
+
+      return 'Login gagal (HTTP ${response.statusCode}).';
+    } on FormatException {
+      return 'Format respons login dari server tidak valid.';
     } catch (e) {
       return 'Tidak bisa terhubung ke server. $e';
     }
