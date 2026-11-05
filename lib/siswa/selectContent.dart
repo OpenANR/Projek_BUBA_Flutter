@@ -350,7 +350,7 @@ class _ContentMenuCardState extends State<_ContentMenuCard> {
                             widget.title,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 22,
+                              fontSize: 20,
                               fontWeight: FontWeight.w900,
                               letterSpacing: 1.5,
                             ),
