@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:audioplayers/audioplayers.dart';
+
 import 'dart:convert';
 
-const String baseUrl = 'http://127.0.0.1:8000';
+import '../../models/kelas_model.dart';
+import '../../services/auth_services.dart';
 
 class HalamanKuis extends StatefulWidget {
-  const HalamanKuis({super.key});
+  const HalamanKuis({super.key, this.kelas});
+
+  final KelasModel? kelas;
 
   @override
   State<HalamanKuis> createState() => _HalamanKuisState();
@@ -39,7 +43,18 @@ class _HalamanKuisState extends State<HalamanKuis> {
   @override
   void initState() {
     super.initState();
-    ambilKelas();
+    final kelasTerpilih = widget.kelas;
+    if (kelasTerpilih == null) {
+      ambilKelas();
+    } else {
+      kelasDipilih = {
+        'id': kelasTerpilih.id,
+        'nama_kelas': kelasTerpilih.namaKelas,
+      };
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) ambilKategori(kelasDipilih);
+      });
+    }
   }
 
   @override
@@ -57,7 +72,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
 
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/api/siswa/kuis/pilih-kelas'),
+        Uri.parse('${AuthServices.baseUrl}/siswa/kuis/pilih-kelas'),
       );
 
       if (response.statusCode != 200) {
@@ -93,12 +108,10 @@ class _HalamanKuisState extends State<HalamanKuis> {
     });
 
     try {
-      final namaKelas = Uri.encodeComponent(
-        kelas['nama_kelas'].toString(),
-      );
+      final namaKelas = Uri.encodeComponent(kelas['nama_kelas'].toString());
 
       final response = await http.get(
-        Uri.parse('$baseUrl/api/siswa/kuis/$namaKelas'),
+        Uri.parse('${AuthServices.baseUrl}/siswa/kuis/$namaKelas'),
       );
 
       if (response.statusCode != 200) {
@@ -141,7 +154,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
 
       final response = await http.get(
         Uri.parse(
-          '$baseUrl/api/siswa/kuis/kuis-list/$idKelas/$idKategori',
+          '${AuthServices.baseUrl}/siswa/kuis/kuis-list/$idKelas/$idKategori',
         ),
       );
 
@@ -188,7 +201,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
 
       final response = await http.get(
         Uri.parse(
-          '$baseUrl/api/siswa/kuis/kuis-show/'
+          '${AuthServices.baseUrl}/siswa/kuis/kuis-show/'
           '$idKelas/$idKategori/$kodeKuis',
         ),
       );
@@ -239,13 +252,13 @@ class _HalamanKuisState extends State<HalamanKuis> {
       return;
     }
 
-    final jawabanBenarDatabase =
-        soalAktif?['jawaban']?.toString().toUpperCase();
+    final jawabanBenarDatabase = soalAktif?['jawaban']
+        ?.toString()
+        .toUpperCase();
 
     setState(() {
       sudahDiperiksa = true;
-      jawabanBenar =
-          jawabanDipilih!.toUpperCase() == jawabanBenarDatabase;
+      jawabanBenar = jawabanDipilih!.toUpperCase() == jawabanBenarDatabase;
       jumlahDijawab++;
       if (jawabanBenar) jumlahBenar++;
     });
@@ -253,9 +266,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text(
           jawabanBenar ? 'Hebat! 🎉' : 'Coba Lagi! 😊',
           textAlign: TextAlign.center,
@@ -284,9 +295,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
   }
 
   void tampilkanPesan(String pesan) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(pesan)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(pesan)));
   }
 
   void kembaliKeKategori() {
@@ -306,73 +315,67 @@ class _HalamanKuisState extends State<HalamanKuis> {
       soalAktif = null;
     });
   }
-  
-@override
-    Widget build(BuildContext context) {
-      return Scaffold(
-        backgroundColor: const Color(0xFFFFF8EE),
-        body: SizedBox.expand(
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              // Background BUBA
-              // Background BUBA
-              Image.asset(
-                'assets/images/backgroundSplash.png',
-                width: double.infinity,
-                height: double.infinity,
-                fit: BoxFit.cover,
-                alignment: Alignment.center,
-                errorBuilder: (context, error, stackTrace) {
-                  debugPrint('Gagal memuat background: $error');
 
-                  return const ColoredBox(
-                    color: Color(0xFFFFF8EE),
-                  );
-                },
-              ),
-              // Isi halaman
-              SafeArea(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 850),
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        children: [
-                          const SizedBox(height: 10),
-                          headerBuba(),
-                          const SizedBox(height: 24),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFF8EE),
+      body: SizedBox.expand(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Background BUBA
+            // Background BUBA
+            Image.asset(
+              'assets/images/backgroundSplash.png',
+              width: double.infinity,
+              height: double.infinity,
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+              errorBuilder: (context, error, stackTrace) {
+                debugPrint('Gagal memuat background: $error');
 
-                          if (errorMessage != null)
-                            errorBox(),
+                return const ColoredBox(color: Color(0xFFFFF8EE));
+              },
+            ),
+            // Isi halaman
+            SafeArea(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 850),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 10),
+                        headerBuba(),
+                        const SizedBox(height: 24),
 
-                          if (loading)
-                            const Padding(
-                              padding: EdgeInsets.all(40),
-                              child: CircularProgressIndicator(),
-                            )
-                          else if (errorMessage == null)
-                            isiHalaman(),
-                        ],
-                      ),
+                        if (errorMessage != null) errorBox(),
+
+                        if (loading)
+                          const Padding(
+                            padding: EdgeInsets.all(40),
+                            child: CircularProgressIndicator(),
+                          )
+                        else if (errorMessage == null)
+                          isiHalaman(),
+                      ],
                     ),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      );
-    }
+      ),
+    );
+  }
 
   Widget headerBuba() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        vertical: 22,
-        horizontal: 18,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 18),
       decoration: BoxDecoration(
         color: const Color(0xFF1E60BE),
         border: Border.all(color: Colors.white, width: 5),
@@ -493,27 +496,19 @@ class _HalamanKuisState extends State<HalamanKuis> {
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
-            shadows: [
-              Shadow(color: Colors.black54, blurRadius: 4),
-            ],
+            shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
           ),
         ),
         const SizedBox(height: 14),
         Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 22,
-            vertical: 9,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 9),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(30),
             border: Border.all(color: Colors.white, width: 3),
           ),
           child: Text(
-            kategoriDipilih?['nama_kategori']
-                    ?.toString()
-                    .toUpperCase() ??
-                '',
+            kategoriDipilih?['nama_kategori']?.toString().toUpperCase() ?? '',
             style: const TextStyle(
               color: Color(0xFF1E60BE),
               fontWeight: FontWeight.w900,
@@ -526,8 +521,8 @@ class _HalamanKuisState extends State<HalamanKuis> {
             final lebar = constraints.maxWidth >= 700
                 ? 230.0
                 : constraints.maxWidth >= 480
-                    ? 205.0
-                    : 165.0;
+                ? 205.0
+                : 165.0;
 
             return Wrap(
               alignment: WrapAlignment.center,
@@ -535,8 +530,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
               runSpacing: 18,
               children: List.generate(daftarKuis.length, (index) {
                 final item = daftarKuis[index];
-                final pertanyaan =
-                    item['pertanyaan']?.toString() ?? '';
+                final pertanyaan = item['pertanyaan']?.toString() ?? '';
 
                 return InkWell(
                   onTap: () => ambilDetailSoal(index),
@@ -548,10 +542,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
                     decoration: BoxDecoration(
                       color: warna[index % warna.length],
                       borderRadius: BorderRadius.circular(30),
-                      border: Border.all(
-                        color: Colors.white,
-                        width: 5,
-                      ),
+                      border: Border.all(color: Colors.white, width: 5),
                       boxShadow: const [
                         BoxShadow(
                           color: Color(0x33000000),
@@ -575,8 +566,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
                           ),
                         ),
                         Column(
-                          mainAxisAlignment:
-                              MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Expanded(
                               child: Center(
@@ -594,10 +584,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
                                 fontSize: 23,
                                 fontWeight: FontWeight.w900,
                                 shadows: [
-                                  Shadow(
-                                    color: Colors.black26,
-                                    blurRadius: 4,
-                                  ),
+                                  Shadow(color: Colors.black26, blurRadius: 4),
                                 ],
                               ),
                             ),
@@ -651,9 +638,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
   Widget halamanHasilKuis() {
     final total = daftarKuis.length;
     final salah = jumlahDijawab - jumlahBenar;
-    final nilai = total == 0
-        ? 0
-        : ((jumlahBenar / total) * 100).round();
+    final nilai = total == 0 ? 0 : ((jumlahBenar / total) * 100).round();
 
     return Container(
       width: double.infinity,
@@ -722,26 +707,11 @@ class _HalamanKuisState extends State<HalamanKuis> {
           const SizedBox(height: 18),
           Row(
             children: [
-              hasilAngka(
-                '✅',
-                '$jumlahBenar',
-                'Benar',
-                const Color(0xFF71BF4F),
-              ),
+              hasilAngka('✅', '$jumlahBenar', 'Benar', const Color(0xFF71BF4F)),
               const SizedBox(width: 8),
-              hasilAngka(
-                '❌',
-                '$salah',
-                'Salah',
-                const Color(0xFFF36B6B),
-              ),
+              hasilAngka('❌', '$salah', 'Salah', const Color(0xFFF36B6B)),
               const SizedBox(width: 8),
-              hasilAngka(
-                '📝',
-                '$total',
-                'Total',
-                const Color(0xFFFAA63A),
-              ),
+              hasilAngka('📝', '$total', 'Total', const Color(0xFFFAA63A)),
             ],
           ),
           const SizedBox(height: 20),
@@ -749,10 +719,10 @@ class _HalamanKuisState extends State<HalamanKuis> {
             nilai >= 90
                 ? '🌟 Wah, luar biasa! Kamu pintar sekali!'
                 : nilai >= 70
-                    ? '🎉 Bagus sekali! Terus tingkatkan kemampuanmu!'
-                    : nilai >= 50
-                        ? '😊 Bagus! Ayo belajar dan mencoba lagi!'
-                        : '💪 Jangan menyerah! Yuk, coba lagi!',
+                ? '🎉 Bagus sekali! Terus tingkatkan kemampuanmu!'
+                : nilai >= 50
+                ? '😊 Bagus! Ayo belajar dan mencoba lagi!'
+                : '💪 Jangan menyerah! Yuk, coba lagi!',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Color(0xFF24436B),
@@ -761,35 +731,23 @@ class _HalamanKuisState extends State<HalamanKuis> {
             ),
           ),
           const SizedBox(height: 22),
-          tombolUtama(
-            'Kembali ke Daftar Kuis',
-            Icons.arrow_back,
-            () {
-              setState(() {
-                halamanHasil = false;
-                soalAktif = null;
-                jawabanDipilih = null;
-                sudahDiperiksa = false;
-              });
-            },
-          ),
+          tombolUtama('Kembali ke Daftar Kuis', Icons.arrow_back, () {
+            setState(() {
+              halamanHasil = false;
+              soalAktif = null;
+              jawabanDipilih = null;
+              sudahDiperiksa = false;
+            });
+          }),
         ],
       ),
     );
   }
 
-  Widget hasilAngka(
-    String ikon,
-    String angka,
-    String label,
-    Color warna,
-  ) {
+  Widget hasilAngka(String ikon, String angka, String label, Color warna) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          vertical: 14,
-          horizontal: 5,
-        ),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 5),
         decoration: BoxDecoration(
           color: warna.withOpacity(0.14),
           borderRadius: BorderRadius.circular(18),
@@ -849,18 +807,14 @@ class _HalamanKuisState extends State<HalamanKuis> {
       children: [
         tombolKembali(kembaliKeKelas),
         const SizedBox(height: 18),
-        judulBagian(
-          'Pilih Kategori',
-          'Kelas ${kelasDipilih['nama_kelas']}',
-        ),
+        judulBagian('Pilih Kategori', 'Kelas ${kelasDipilih['nama_kelas']}'),
         const SizedBox(height: 18),
         if (daftarKategori.isEmpty)
           halamanKosong()
         else
           ...daftarKategori.map((kategori) {
             return kartuPilihan(
-              nama: kategori['nama_kategori']?.toString() ??
-                  'Kategori',
+              nama: kategori['nama_kategori']?.toString() ?? 'Kategori',
               warna: const Color(0xFFFAA63A),
               icon: Icons.category_rounded,
               onTap: () => ambilDaftarKuis(kategori),
@@ -888,10 +842,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
       children: [
         tombolKembali(kembaliKeKategori),
         const SizedBox(height: 18),
-        judulBagian(
-          'Ayo Kerjakan!',
-          '${kategoriDipilih['nama_kategori']}',
-        ),
+        judulBagian('Ayo Kerjakan!', '${kategoriDipilih['nama_kategori']}'),
         const SizedBox(height: 18),
 
         // Informasi nomor soal
@@ -923,10 +874,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(25),
-            border: Border.all(
-              color: const Color(0xFF5EBEF3),
-              width: 4,
-            ),
+            border: Border.all(color: const Color(0xFF5EBEF3), width: 4),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x22000000),
@@ -986,8 +934,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
           final kode = item['kode'].toString();
           final teks = item['teks']?.toString() ?? '';
 
-          final audio = soal['audio_pilihan_${kode.toLowerCase()}']
-              ?.toString();
+          final audio = soal['audio_pilihan_${kode.toLowerCase()}']?.toString();
 
           final dipilih = jawabanDipilih == kode;
 
@@ -1018,10 +965,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
               decoration: BoxDecoration(
                 color: warna,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: Colors.white,
-                  width: 4,
-                ),
+                border: Border.all(color: Colors.white, width: 4),
                 boxShadow: const [
                   BoxShadow(
                     color: Color(0x22000000),
@@ -1063,10 +1007,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
                       ),
                     ),
                   if (sudahDiperiksa && benar)
-                    const Icon(
-                      Icons.check_circle,
-                      color: Colors.white,
-                    ),
+                    const Icon(Icons.check_circle, color: Colors.white),
                 ],
               ),
             ),
@@ -1076,17 +1017,11 @@ class _HalamanKuisState extends State<HalamanKuis> {
         const SizedBox(height: 10),
 
         if (!sudahDiperiksa)
-          tombolUtama(
-            'Periksa Jawaban',
-            Icons.check_circle,
-            periksaJawaban,
-          ),
+          tombolUtama('Periksa Jawaban', Icons.check_circle, periksaJawaban),
 
         if (sudahDiperiksa)
           tombolUtama(
-            indexSoal == daftarKuis.length - 1
-                ? 'Selesai'
-                : 'Soal Selanjutnya',
+            indexSoal == daftarKuis.length - 1 ? 'Selesai' : 'Soal Selanjutnya',
             Icons.arrow_forward_rounded,
             () {
               if (indexSoal < daftarKuis.length - 1) {
@@ -1110,10 +1045,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
             style: OutlinedButton.styleFrom(
               minimumSize: const Size(double.infinity, 48),
               foregroundColor: const Color(0xFF1E60BE),
-              side: const BorderSide(
-                color: Color(0xFF1E60BE),
-                width: 2,
-              ),
+              side: const BorderSide(color: Color(0xFF1E60BE), width: 2),
             ),
           ),
       ],
@@ -1128,10 +1060,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: const Color(0xFF5EBEF3),
-          width: 3,
-        ),
+        border: Border.all(color: const Color(0xFF5EBEF3), width: 3),
       ),
       child: const Column(
         children: [
@@ -1191,17 +1120,11 @@ class _HalamanKuisState extends State<HalamanKuis> {
       child: Container(
         width: double.infinity,
         margin: const EdgeInsets.only(bottom: 14),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 20,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         decoration: BoxDecoration(
           color: warna,
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(
-            color: Colors.white,
-            width: 4,
-          ),
+          border: Border.all(color: Colors.white, width: 4),
           boxShadow: const [
             BoxShadow(
               color: Color(0x22000000),
@@ -1224,10 +1147,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
                 ),
               ),
             ),
-            const Icon(
-              Icons.arrow_forward_ios_rounded,
-              color: Colors.white,
-            ),
+            const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white),
           ],
         ),
       ),
@@ -1272,11 +1192,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
     );
   }
 
-  Widget tombolUtama(
-    String label,
-    IconData icon,
-    VoidCallback onTap,
-  ) {
+  Widget tombolUtama(String label, IconData icon, VoidCallback onTap) {
     return SizedBox(
       width: double.infinity,
       height: 55,
@@ -1285,10 +1201,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
         icon: Icon(icon),
         label: Text(
           label,
-          style: const TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF1E60BE),
@@ -1313,11 +1226,7 @@ class _HalamanKuisState extends State<HalamanKuis> {
       ),
       child: Column(
         children: [
-          const Icon(
-            Icons.wifi_off_rounded,
-            color: Colors.red,
-            size: 35,
-          ),
+          const Icon(Icons.wifi_off_rounded, color: Colors.red, size: 35),
           const SizedBox(height: 8),
           Text(
             errorMessage ?? 'Terjadi kesalahan.',

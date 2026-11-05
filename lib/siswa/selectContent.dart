@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:buba_projek/siswa/quis/quis.dart';
 
+import '../models/kelas_model.dart';
+import 'selectClass.dart';
+
 class SelectContent extends StatelessWidget {
   const SelectContent({super.key});
+
+  Future<KelasModel?> _pilihKelas(BuildContext context) {
+    return Navigator.push<KelasModel>(
+      context,
+      MaterialPageRoute(builder: (context) => const SelectClass()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +78,10 @@ class SelectContent extends StatelessWidget {
                           : Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.center,
-                              children: _buildCards(context, isLandscape: false),
+                              children: _buildCards(
+                                context,
+                                isLandscape: false,
+                              ),
                             ),
                     ),
                   ),
@@ -157,17 +170,25 @@ class SelectContent extends StatelessWidget {
         height: cardHeight,
         isLandscape: isLandscape,
         onTap: () {
-          _showInfoDialog(
+          Navigator.push<void>(
             context,
-            title: 'Materi Pembelajaran',
-            message: 'Menu Materi Pembelajaran sedang disiapkan!',
+            MaterialPageRoute(
+              builder: (context) => SelectClass(
+                onClassSelected: (kelas) {
+                  _showInfoDialog(
+                    context,
+                    title: 'Materi Pembelajaran',
+                    message:
+                        'Kelas ${kelas.namaKelas} (ID: ${kelas.id}) dipilih, '
+                        'tetapi halaman Materi belum tersedia.',
+                  );
+                },
+              ),
+            ),
           );
         },
       ),
-      SizedBox(
-        width: isLandscape ? 24 : 0,
-        height: isLandscape ? 0 : 20,
-      ),
+      SizedBox(width: isLandscape ? 24 : 0, height: isLandscape ? 0 : 20),
       _ContentMenuCard(
         title: 'KUIS',
         color: const Color(0xFF3A84FA), // Biru
@@ -176,19 +197,17 @@ class SelectContent extends StatelessWidget {
         width: cardWidth,
         height: cardHeight,
         isLandscape: isLandscape,
-        onTap: () {
-          Navigator.push(
+        onTap: () async {
+          final kelas = await _pilihKelas(context);
+          if (!context.mounted || kelas == null) return;
+
+          await Navigator.push<void>(
             context,
-            MaterialPageRoute(
-              builder: (context) => const HalamanKuis(),
-            ),
+            MaterialPageRoute(builder: (context) => HalamanKuis(kelas: kelas)),
           );
         },
       ),
-      SizedBox(
-        width: isLandscape ? 24 : 0,
-        height: isLandscape ? 0 : 20,
-      ),
+      SizedBox(width: isLandscape ? 24 : 0, height: isLandscape ? 0 : 20),
       _ContentMenuCard(
         title: 'RIWAYAT',
         color: const Color(0xFFFAA63A), // Oranye
@@ -201,7 +220,8 @@ class SelectContent extends StatelessWidget {
           _showInfoDialog(
             context,
             title: 'Riwayat Kuis',
-            message: 'Kamu bisa melihat skor dan hasil kuis sebelumnya di sini!',
+            message:
+                'Kamu bisa melihat skor dan hasil kuis sebelumnya di sini!',
           );
         },
       ),
@@ -322,11 +342,7 @@ class _ContentMenuCardState extends State<_ContentMenuCard> {
                   ? Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Expanded(
-                          child: Center(
-                            child: _buildIcon(),
-                          ),
-                        ),
+                        Expanded(child: Center(child: _buildIcon())),
                         const SizedBox(height: 8),
                         Text(
                           widget.title,
@@ -378,11 +394,7 @@ class _ContentMenuCardState extends State<_ContentMenuCard> {
       height: size,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
-        return Icon(
-          widget.fallbackIcon,
-          size: size * 0.8,
-          color: Colors.white,
-        );
+        return Icon(widget.fallbackIcon, size: size * 0.8, color: Colors.white);
       },
     );
   }
