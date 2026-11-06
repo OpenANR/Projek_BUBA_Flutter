@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/kelas_model.dart';
 import 'selectClass.dart';
+import 'quis/quisList.dart';
 
 class SelectContent extends StatelessWidget {
   const SelectContent({super.key});
@@ -217,7 +218,21 @@ class SelectContent extends StatelessWidget {
         width: cardWidth,
         height: cardHeight,
         isLandscape: isLandscape,
-        onTap: () => _bukaKuis(context),
+        onTap: () async {
+          final kelas = await _pilihKelas(context);
+          if (!context.mounted || kelas == null) return;
+
+          await Navigator.push<void>(
+            context,
+            MaterialPageRoute(
+              builder: (context) => QuisListPage(
+                kelasId: kelas.id,
+                kategoriId: 0,
+                namaKelas: kelas.namaKelas,
+              ),
+            ),
+          );
+        },
       ),
 
       SizedBox(

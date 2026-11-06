@@ -2,10 +2,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/materi_model.dart';
+import 'auth_services.dart';
 
 class MateriServices {
   // URL API Laravel
-  static const String baseUrl = 'http://http://127.0.0.1:8000/api';
+  static const String baseUrl = AuthServices.baseUrl;
 
   // Mengambil semua data materi
   Future<List<MateriModel>> getMateri({
