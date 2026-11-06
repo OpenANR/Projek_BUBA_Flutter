@@ -1,426 +1,1328 @@
-
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 
-// Fungsi utama untuk menjalankan aplikasi Flutter
-void main() {
-  runApp(const BubaApp());
-}
+import '../../models/kelas_model.dart';
+import '../../models/materi_model.dart';
+import '../../services/auth_services.dart';
+import '../../services/materi_services.dart';
 
-// Widget utama aplikasi BUBA
-class BubaApp extends StatelessWidget {
-  const BubaApp({super.key});
+class HalamanMateri extends StatefulWidget {
+  final KelasModel? kelas;
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      // Menghilangkan tulisan debug di pojok kanan atas
-      debugShowCheckedModeBanner: false,
-
-      // Nama aplikasi
-      title: 'BUBA - Kelola Materi',
-
-      // Mengatur tema dan warna utama aplikasi
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF269B70),
-        ),
-        useMaterial3: true,
-      ),
-
-      // Menampilkan halaman Kelola Materi
-      home: const MateriPage(),
-    );
-  }
-}
-
-// StatefulWidget digunakan karena tampilan dapat berubah,
-// misalnya ketika dropdown dipilih atau materi ditambahkan.
-class MateriPage extends StatefulWidget {
-  const MateriPage({super.key});
+  const HalamanMateri({
+    super.key,
+    this.kelas,
+  });
 
   @override
-  State<MateriPage> createState() => _MateriPageState();
+  State<HalamanMateri> createState() => _HalamanMateriState();
 }
 
-class _MateriPageState extends State<MateriPage> {
-  // Controller untuk mengambil teks dari kolom judul materi
-  final TextEditingController judulController =
-      TextEditingController();
+class _HalamanMateriState extends State<HalamanMateri> {
+  // ============================================================
+  // DATA
+  // ============================================================
 
-  // Controller untuk mengambil teks dari kolom isi materi
-  final TextEditingController isiController =
-      TextEditingController();
+  List<KelasModel> daftarKelas = [];
+  List<dynamic> daftarKategori = [];
+  List<MateriModel> daftarMateri = [];
 
-  // Menyimpan pilihan kategori dan kelas yang dipilih pengguna
-  // Nilai null berarti belum ada pilihan.
-  String? kategoriTerpilih;
-  String? kelasTerpilih;
+  MateriModel? materiAktif;
 
-  // Daftar pilihan kategori untuk dropdown
-  // Data ini masih berupa contoh, belum dari database Laravel.
-  final List<String> kategoriList = [
-    'Huruf & Angka',
-    'Warna & Bentuk',
-    'Hewan & Tumbuhan',
-    'Anggota Tubuh',
-  ];
+  KelasModel? kelasDipilih;
+  dynamic kategoriDipilih;
 
-  // Daftar pilihan kelas untuk dropdown
-  final List<String> kelasList = [
-    'Kelas A',
-    'Kelas B',
-  ];
+  bool loading = false;
+  String errorMessage = '';
 
-  // Menyimpan materi sementara selama aplikasi berjalan.
-  // Data akan hilang jika aplikasi dimulai ulang.
-  final List<Map<String, String>> daftarMateri = [];
+  final AudioPlayer audioPlayer = AudioPlayer();
 
-  // Fungsi untuk memeriksa dan menyimpan materi
-  void simpanMateri() {
-    // Memastikan semua kolom telah diisi
-    if (judulController.text.trim().isEmpty ||
-        isiController.text.trim().isEmpty ||
-        kategoriTerpilih == null ||
-        kelasTerpilih == null) {
+  final MateriServices materiServices = MateriServices();
 
-      // Menampilkan pesan jika masih ada kolom kosong
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Semua kolom harus diisi!'),
-        ),
-      );
+  // ============================================================
+  // INIT
+  // ============================================================
 
-      // Menghentikan proses penyimpanan
-      return;
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.kelas != null) {
+      kelasDipilih = widget.kelas;
+      ambilKategori();
+    } else {
+      ambilKelas();
     }
-
-    // Memperbarui tampilan dan menambahkan materi ke daftar
-    setState(() {
-      daftarMateri.add({
-        'judul': judulController.text.trim(),
-        'isi': isiController.text.trim(),
-        'kategori': kategoriTerpilih!,
-        'kelas': kelasTerpilih!,
-      });
-    });
-
-    // Mengosongkan kolom judul dan isi setelah disimpan
-    judulController.clear();
-    isiController.clear();
-
-    // Mengembalikan dropdown ke kondisi belum dipilih
-    setState(() {
-      kategoriTerpilih = null;
-      kelasTerpilih = null;
-    });
-
-    // Menampilkan pesan bahwa materi berhasil ditambahkan
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Materi berhasil ditambahkan!'),
-      ),
-    );
   }
 
-  // Membersihkan controller ketika halaman tidak digunakan lagi
   @override
   void dispose() {
-    judulController.dispose();
-    isiController.dispose();
+    audioPlayer.dispose();
     super.dispose();
   }
 
-  // Fungsi build untuk menyusun tampilan halaman
+  // ============================================================
+  // AMBIL KELAS
+  // ============================================================
+
+  Future<void> ambilKelas() async {
+    setState(() {
+      loading = true;
+      errorMessage = '';
+    });
+
+    try {
+      final hasil = await materiServices.getKelas();
+
+      if (!mounted) return;
+
+      setState(() {
+        daftarKelas = hasil;
+        loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        loading = false;
+        errorMessage = e.toString();
+      });
+    }
+  }
+
+  // ============================================================
+  // AMBIL KATEGORI
+  // ============================================================
+
+  Future<void> ambilKategori() async {
+    if (kelasDipilih == null) return;
+
+    setState(() {
+      loading = true;
+      errorMessage = '';
+      kategoriDipilih = null;
+      daftarMateri = [];
+      materiAktif = null;
+    });
+
+    try {
+      final hasil = await materiServices.getKategori(
+        kelasDipilih!.namaKelas,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        daftarKategori = hasil;
+        loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        loading = false;
+        errorMessage = e.toString();
+      });
+    }
+  }
+
+  // ============================================================
+  // AMBIL DAFTAR MATERI
+  // ============================================================
+
+  Future<void> ambilDaftarMateri() async {
+    if (kelasDipilih == null ||
+        kategoriDipilih == null) {
+      return;
+    }
+
+    setState(() {
+      loading = true;
+      errorMessage = '';
+      daftarMateri = [];
+      materiAktif = null;
+    });
+
+    try {
+      final int idKelas = kelasDipilih!.id;
+
+      final int idKategori = int.parse(
+        kategoriDipilih['id'].toString(),
+      );
+
+      final hasil = await materiServices.getMateri(
+        kelasId: idKelas,
+        kategoriId: idKategori,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        daftarMateri = hasil;
+        loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        loading = false;
+        errorMessage = e.toString();
+      });
+    }
+  }
+
+  // ============================================================
+  // DETAIL MATERI
+  // ============================================================
+
+  Future<void> ambilDetailMateri(int index) async {
+    if (index < 0 || index >= daftarMateri.length) {
+      return;
+    }
+
+    setState(() {
+      loading = true;
+      errorMessage = '';
+    });
+
+    try {
+      final MateriModel materi = daftarMateri[index];
+
+      if (!mounted) return;
+
+      setState(() {
+        materiAktif = materi;
+        loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        loading = false;
+        errorMessage = e.toString();
+      });
+    }
+  }
+
+  // ============================================================
+  // AUDIO
+  // ============================================================
+
+  Future<void> putarAudio(String url) async {
+    try {
+      await audioPlayer.stop();
+
+      await audioPlayer.play(
+        UrlSource(url),
+      );
+    } catch (e) {
+      debugPrint('Gagal memutar audio: $e');
+    }
+  }
+
+  Future<void> stopAudio() async {
+    try {
+      await audioPlayer.stop();
+    } catch (e) {
+      debugPrint('Gagal menghentikan audio: $e');
+    }
+  }
+
+  // ============================================================
+  // URL GAMBAR
+  // ============================================================
+
+  String getImageUrl(String? gambar) {
+    if (gambar == null || gambar.isEmpty) {
+      return '';
+    }
+
+    if (gambar.startsWith('http://') ||
+        gambar.startsWith('https://')) {
+      return gambar;
+    }
+
+    final baseUrl =
+        AuthServices.baseUrl.replaceFirst('/api', '');
+
+    return '$baseUrl/storage/$gambar';
+  }
+
+  // ============================================================
+  // URL AUDIO
+  // ============================================================
+
+  String getAudioUrl(String audio) {
+    if (audio.startsWith('http://') ||
+        audio.startsWith('https://')) {
+      return audio;
+    }
+
+    final baseUrl =
+        AuthServices.baseUrl.replaceFirst('/api', '');
+
+    return '$baseUrl/storage/$audio';
+  }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Warna latar belakang halaman
-      backgroundColor: const Color(0xFFF4F8F6),
-
-      // Bagian header di atas halaman
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF269B70),
-        foregroundColor: Colors.white,
-        title: const Text(
-          'BUBA • Kelola Materi',
-          style: TextStyle(fontWeight: FontWeight.bold),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(
+              'assets/images/backgroundSplash.png',
+            ),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              headerBuba(),
+              Expanded(
+                child: isiHalaman(),
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
 
-      // Membuat konten berada di tengah dan memiliki batas lebar
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 850),
+  // ============================================================
+  // HEADER
+  // ============================================================
 
-          // ListView memungkinkan halaman digulir
-          child: ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              // Judul halaman
-              const Text(
-                'Kelola Materi',
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF206B50),
-                ),
-              ),
+  Widget headerBuba() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: 20,
+        vertical: 15,
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: () {
+              if (materiAktif != null) {
+                stopAudio();
 
-              const SizedBox(height: 6),
+                setState(() {
+                  materiAktif = null;
+                });
+              } else if (kategoriDipilih != null) {
+                setState(() {
+                  kategoriDipilih = null;
+                  daftarMateri = [];
+                });
+              } else if (widget.kelas == null &&
+                  kelasDipilih != null) {
+                setState(() {
+                  kelasDipilih = null;
+                  daftarKategori = [];
+                });
+              } else {
+                Navigator.pop(context);
+              }
+            },
+            icon: const Icon(
+              Icons.arrow_back_ios_new,
+              color: Colors.white,
+              size: 22,
+            ),
+          ),
 
-              // Deskripsi halaman
-              const Text(
-                'Tambahkan materi pembelajaran untuk anak.',
-                style: TextStyle(color: Colors.black54),
-              ),
+          const SizedBox(width: 5),
 
-              const SizedBox(height: 22),
-
-              // Card sebagai wadah formulir tambah materi
-              Card(
-                elevation: 1,
+          const Expanded(
+            child: Text(
+              'MATERI BUBA',
+              style: TextStyle(
                 color: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-                child: Padding(
+  // ============================================================
+  // ISI HALAMAN
+  // ============================================================
+
+  Widget isiHalaman() {
+    if (loading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          color: Colors.white,
+        ),
+      );
+    }
+
+    if (errorMessage.isNotEmpty) {
+      return halamanError();
+    }
+
+    if (kelasDipilih == null) {
+      return halamanPilihKelas();
+    }
+
+    if (kategoriDipilih == null) {
+      return halamanPilihKategori();
+    }
+
+    if (daftarMateri.isEmpty) {
+      return halamanKosong();
+    }
+
+    if (materiAktif == null) {
+      return halamanDaftarMateri();
+    }
+
+    return halamanDetailMateri();
+  }
+
+  // ============================================================
+  // HALAMAN ERROR
+  // ============================================================
+
+  Widget halamanError() {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(25),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              color: Colors.white,
+              size: 70,
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text(
+              'Terjadi Kesalahan',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            Text(
+              errorMessage,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+              ),
+            ),
+
+            const SizedBox(height: 25),
+
+            ElevatedButton(
+              onPressed: () {
+                if (kelasDipilih == null) {
+                  ambilKelas();
+                } else if (kategoriDipilih == null) {
+                  ambilKategori();
+                } else {
+                  ambilDaftarMateri();
+                }
+              },
+              child: const Text('Coba Lagi'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // PILIH KELAS
+  // ============================================================
+
+  Widget halamanPilihKelas() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          const SizedBox(height: 10),
+
+          const Text(
+            '📚 PILIH KELAS!',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          const Text(
+            'Pilih kelas untuk melihat materi pembelajaran.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+            ),
+          ),
+
+          const SizedBox(height: 30),
+
+          ...daftarKelas.asMap().entries.map(
+            (entry) {
+              final index = entry.key;
+              final kelas = entry.value;
+
+              final warna = [
+                const Color(0xFF71BF4F),
+                const Color(0xFFFAA63A),
+                const Color(0xFFD8759C),
+                const Color(0xFF5EBEF3),
+                const Color(0xFF9C65CD),
+              ][index % 5];
+
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    kelasDipilih = kelas;
+                  });
+
+                  ambilKategori();
+                },
+                child: Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(
+                    bottom: 15,
+                  ),
                   padding: const EdgeInsets.all(20),
-
-                  // Column menyusun komponen secara vertikal
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  decoration: BoxDecoration(
+                    color: warna,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color:
+                            Colors.black.withOpacity(0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
                     children: [
-                      const Text(
-                        'Tambah Materi Baru',
-                        style: TextStyle(
-                          fontSize: 19,
-                          fontWeight: FontWeight.bold,
+                      Container(
+                        width: 55,
+                        height: 55,
+                        decoration: BoxDecoration(
+                          color:
+                              Colors.white.withOpacity(0.25),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.school,
+                          color: Colors.white,
+                          size: 30,
                         ),
                       ),
 
-                      const SizedBox(height: 20),
+                      const SizedBox(width: 15),
 
-                      // Label dropdown kategori
-                      const Text('Kategori'),
-                      const SizedBox(height: 8),
-
-                      // Dropdown untuk memilih kategori materi
-                      DropdownButtonFormField<String>(
-                        value: kategoriTerpilih,
-                        isExpanded: true,
-
-                        // Tampilan kotak dropdown
-                        decoration: InputDecoration(
-                          hintText: 'Pilih kategori materi',
-                          prefixIcon:
-                              const Icon(Icons.category_outlined),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-
-                        // Mengubah setiap kategori menjadi pilihan dropdown
-                        items: kategoriList.map((kategori) {
-                          return DropdownMenuItem<String>(
-                            value: kategori,
-                            child: Text(kategori),
-                          );
-                        }).toList(),
-
-                        // Menyimpan kategori ketika pengguna memilihnya
-                        onChanged: (value) {
-                          setState(() {
-                            kategoriTerpilih = value;
-                          });
-                        },
-                      ),
-
-                      const SizedBox(height: 18),
-
-                      // Label dropdown kelas
-                      const Text('Kelas'),
-                      const SizedBox(height: 8),
-
-                      // Dropdown untuk memilih kelas
-                      DropdownButtonFormField<String>(
-                        value: kelasTerpilih,
-                        isExpanded: true,
-
-                        decoration: InputDecoration(
-                          hintText: 'Pilih kelas',
-                          prefixIcon:
-                              const Icon(Icons.school_outlined),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-
-                        // Menampilkan daftar kelas sebagai pilihan
-                        items: kelasList.map((kelas) {
-                          return DropdownMenuItem<String>(
-                            value: kelas,
-                            child: Text(kelas),
-                          );
-                        }).toList(),
-
-                        // Menyimpan kelas yang dipilih
-                        onChanged: (value) {
-                          setState(() {
-                            kelasTerpilih = value;
-                          });
-                        },
-                      ),
-
-                      const SizedBox(height: 18),
-
-                      // Label kolom judul materi
-                      const Text('Judul Materi'),
-                      const SizedBox(height: 8),
-
-                      // Kolom untuk memasukkan judul materi
-                      TextField(
-                        controller: judulController,
-                        decoration: InputDecoration(
-                          hintText: 'Contoh: Mengenal Huruf A',
-                          prefixIcon:
-                              const Icon(Icons.menu_book_outlined),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                      Expanded(
+                        child: Text(
+                          kelas.namaKelas,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
 
-                      const SizedBox(height: 18),
-
-                      // Label kolom isi materi
-                      const Text('Isi Materi'),
-                      const SizedBox(height: 8),
-
-                      // Kolom untuk memasukkan isi materi
-                      // maxLines: 4 membuat kolom memiliki empat baris
-                      TextField(
-                        controller: isiController,
-                        maxLines: 4,
-                        decoration: InputDecoration(
-                          hintText: 'Tuliskan isi materi...',
-                          alignLabelWithHint: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 22),
-
-                      // Tombol untuk menjalankan fungsi simpanMateri()
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: FilledButton.icon(
-                          onPressed: simpanMateri,
-                          icon: const Icon(Icons.save_outlined),
-                          label: const Text('Simpan Materi'),
-                          style: FilledButton.styleFrom(
-                            backgroundColor:
-                                const Color(0xFF269B70),
-                            foregroundColor: Colors.white,
-                          ),
-                        ),
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        color: Colors.white,
                       ),
                     ],
                   ),
                 ),
-              ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
-              const SizedBox(height: 25),
+  // ============================================================
+  // PILIH KATEGORI
+  // ============================================================
 
-              // Judul bagian daftar materi
-              const Text(
-                'Daftar Materi',
-                style: TextStyle(
-                  fontSize: 21,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+  Widget halamanPilihKategori() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          const SizedBox(height: 10),
 
-              const SizedBox(height: 12),
+          const Text(
+            '📖 PILIH KATEGORI!',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 27,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
 
-              // Pesan yang muncul jika daftar materi masih kosong
-              if (daftarMateri.isEmpty)
-                const Card(
-                  color: Colors.white,
-                  child: Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Center(
-                      child: Text(
-                        'Belum ada materi yang ditambahkan.',
-                        style: TextStyle(color: Colors.black54),
-                      ),
-                    ),
+          const SizedBox(height: 8),
+
+          Text(
+            'Kelas ${kelasDipilih!.namaKelas}',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+
+          const SizedBox(height: 30),
+
+          ...daftarKategori.asMap().entries.map(
+            (entry) {
+              final index = entry.key;
+              final kategori = entry.value;
+
+              final warna = [
+                const Color(0xFF71BF4F),
+                const Color(0xFFFAA63A),
+                const Color(0xFFD8759C),
+                const Color(0xFF5EBEF3),
+                const Color(0xFF9C65CD),
+                const Color(0xFFFFD629),
+                const Color(0xFF3CBDB1),
+                const Color(0xFFF36B6B),
+              ][index % 8];
+
+              final namaKategori =
+                  kategori['nama_kategori'] ??
+                  kategori['nama'] ??
+                  'Kategori';
+
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    kategoriDipilih = kategori;
+                  });
+
+                  ambilDaftarMateri();
+                },
+                child: Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(
+                    bottom: 15,
                   ),
-                ),
-
-              // Menampilkan semua materi yang telah ditambahkan
-              // asMap().entries memberikan indeks dan data materi
-              ...daftarMateri.asMap().entries.map((entry) {
-                final index = entry.key;
-                final materi = entry.value;
-
-                return Card(
-                  color: Colors.white,
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: ListTile(
-                    // Nomor urut materi
-                    leading: CircleAvatar(
-                      backgroundColor: const Color(0xFFDDF4E8),
-                      child: Text(
-                        '${index + 1}',
-                        style: const TextStyle(
-                          color: Color(0xFF206B50),
-                          fontWeight: FontWeight.bold,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: warna,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color:
+                            Colors.black.withOpacity(0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 55,
+                        height: 55,
+                        decoration: BoxDecoration(
+                          color:
+                              Colors.white.withOpacity(0.25),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.menu_book,
+                          color: Colors.white,
+                          size: 30,
                         ),
                       ),
-                    ),
 
-                    // Menampilkan judul materi
-                    title: Text(
-                      materi['judul']!,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
+                      const SizedBox(width: 15),
+
+                      Expanded(
+                        child: Text(
+                          namaKategori.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 19,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                    ),
 
-                    // Menampilkan kategori, kelas, dan isi materi
-                    subtitle: Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: Text(
-                        'Kategori: ${materi['kategori']}\n'
-                        'Kelas: ${materi['kelas']}\n'
-                        '${materi['isi']}',
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        color: Colors.white,
                       ),
-                    ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
-                    // Memberikan ruang untuk beberapa baris teks
-                    isThreeLine: true,
+  // ============================================================
+  // DAFTAR MATERI
+  // ============================================================
 
-                    // Tombol hapus untuk menghilangkan materi dari daftar
-                    trailing: IconButton(
-                      icon: const Icon(
-                        Icons.delete_outline,
-                        color: Colors.red,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          daftarMateri.removeAt(index);
-                        });
+  Widget halamanDaftarMateri() {
+    final namaKategori =
+        kategoriDipilih['nama_kategori'] ??
+        kategoriDipilih['nama'] ??
+        'Kategori';
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          const Text(
+            '📚 PILIH MATERI!',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          const Text(
+            'Ayo pilih materi yang ingin kamu pelajari!',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+            ),
+          ),
+
+          const SizedBox(height: 15),
+
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.9),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Text(
+              namaKategori.toString(),
+              style: const TextStyle(
+                color: Color(0xFF1E60BE),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 25),
+
+          Wrap(
+            spacing: 15,
+            runSpacing: 15,
+            children:
+                daftarMateri.asMap().entries.map(
+              (entry) {
+                return kartuMateri(
+                  entry.key,
+                  entry.value,
+                );
+              },
+            ).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // KARTU MATERI
+  // ============================================================
+
+  Widget kartuMateri(
+    int index,
+    MateriModel materi,
+  ) {
+    final warna = [
+      const Color(0xFF71BF4F),
+      const Color(0xFFFAA63A),
+      const Color(0xFFD8759C),
+      const Color(0xFF5EBEF3),
+      const Color(0xFF9C65CD),
+      const Color(0xFFFFD629),
+      const Color(0xFF3CBDB1),
+      const Color(0xFFF36B6B),
+    ][index % 8];
+
+    final imageUrl = getImageUrl(
+      materi.gambar,
+    );
+
+    return GestureDetector(
+      onTap: () {
+        ambilDetailMateri(index);
+      },
+      child: Container(
+        width:
+            MediaQuery.of(context).size.width > 600
+                ? 270
+                : MediaQuery.of(context).size.width - 55,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color:
+                  Colors.black.withOpacity(0.15),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: 180,
+              width: double.infinity,
+              child: imageUrl.isNotEmpty
+                  ? Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder:
+                          (context, error, stackTrace) {
+                        return Container(
+                          color:
+                              warna.withOpacity(0.2),
+                          child: Icon(
+                            Icons.menu_book,
+                            color: warna,
+                            size: 65,
+                          ),
+                        );
                       },
+                      loadingBuilder:
+                          (context, child, progress) {
+                        if (progress == null) {
+                          return child;
+                        }
+
+                        return Container(
+                          color:
+                              warna.withOpacity(0.2),
+                          child: Center(
+                            child:
+                                CircularProgressIndicator(
+                              color: warna,
+                            ),
+                          ),
+                        );
+                      },
+                    )
+                  : Container(
+                      color:
+                          warna.withOpacity(0.2),
+                      child: Icon(
+                        Icons.menu_book,
+                        color: warna,
+                        size: 65,
+                      ),
+                    ),
+            ),
+
+            Padding(
+              padding:
+                  const EdgeInsets.all(15),
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    materi.kodeMateri,
+                    style: TextStyle(
+                      color: warna,
+                      fontSize: 13,
+                      fontWeight:
+                          FontWeight.bold,
                     ),
                   ),
-                );
-              }),
-            ],
+
+                  const SizedBox(height: 6),
+
+                  Text(
+                    materi.namaMateri,
+                    maxLines: 2,
+                    overflow:
+                        TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 18,
+                      fontWeight:
+                          FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: warna,
+                      borderRadius:
+                          BorderRadius.circular(
+                              20),
+                    ),
+                    child: const Text(
+                      'Pelajari →',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // DETAIL MATERI
+  // ============================================================
+
+  Widget halamanDetailMateri() {
+    final MateriModel materi =
+        materiAktif!;
+
+    final imageUrl = getImageUrl(
+      materi.gambar,
+    );
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(
+        20,
+        10,
+        20,
+        30,
+      ),
+      child: Column(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+        children: [
+          const Center(
+            child: Text(
+              '📖 DETAIL MATERI',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 27,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
+
+          const SizedBox(height: 20),
+
+          if (imageUrl.isNotEmpty)
+            Container(
+              width: double.infinity,
+              constraints:
+                  const BoxConstraints(
+                maxHeight: 300,
+              ),
+              decoration: BoxDecoration(
+                borderRadius:
+                    BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color:
+                        Colors.black.withOpacity(
+                            0.2),
+                    blurRadius: 10,
+                    offset:
+                        const Offset(0, 5),
+                  ),
+                ],
+              ),
+              clipBehavior:
+                  Clip.antiAlias,
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder:
+                    (context, error, stackTrace) {
+                  return Container(
+                    height: 220,
+                    color:
+                        Colors.white.withOpacity(
+                            0.8),
+                    child:
+                        const Center(
+                      child: Icon(
+                        Icons
+                            .image_not_supported,
+                        size: 60,
+                        color:
+                            Colors.grey,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+          const SizedBox(height: 20),
+
+          Container(
+            width: double.infinity,
+            padding:
+                const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius:
+                  BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  color:
+                      Colors.black.withOpacity(
+                          0.15),
+                  blurRadius: 10,
+                  offset:
+                      const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                Text(
+                  materi.kodeMateri,
+                  style: const TextStyle(
+                    color:
+                        Color(0xFF5EBEF3),
+                    fontSize: 15,
+                    fontWeight:
+                        FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  materi.namaMateri,
+                  style: const TextStyle(
+                    color:
+                        Colors.black87,
+                    fontSize: 25,
+                    fontWeight:
+                        FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                const Divider(),
+
+                const SizedBox(height: 15),
+
+                if (materi
+                    .isiMateri
+                    .isNotEmpty) ...[
+                  const Text(
+                    'Materi',
+                    style: TextStyle(
+                      color:
+                          Color(0xFF1E60BE),
+                      fontSize: 20,
+                      fontWeight:
+                          FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Text(
+                    materi.isiMateri,
+                    style:
+                        const TextStyle(
+                      color:
+                          Colors.black87,
+                      fontSize: 16,
+                      height: 1.7,
+                    ),
+                  ),
+                ],
+
+                if (materi.audio != null &&
+                    materi.audio!.isNotEmpty) ...[
+                  const SizedBox(height: 25),
+
+                  const Text(
+                    '🔊 Audio Materi',
+                    style: TextStyle(
+                      color:
+                          Color(0xFF1E60BE),
+                      fontSize: 20,
+                      fontWeight:
+                          FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child:
+                            ElevatedButton.icon(
+                          onPressed: () {
+                            putarAudio(
+                              getAudioUrl(
+                                materi.audio!,
+                              ),
+                            );
+                          },
+                          icon:
+                              const Icon(
+                            Icons.play_arrow,
+                          ),
+                          label:
+                              const Text(
+                            'Putar Audio',
+                          ),
+                          style:
+                              ElevatedButton.styleFrom(
+                            backgroundColor:
+                                const Color(
+                                    0xFF5EBEF3),
+                            foregroundColor:
+                                Colors.white,
+                            padding:
+                                const EdgeInsets
+                                    .symmetric(
+                              vertical: 14,
+                            ),
+                            shape:
+                                RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius
+                                      .circular(
+                                          15),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(
+                        width: 10,
+                      ),
+
+                      IconButton(
+                        onPressed:
+                            stopAudio,
+                        icon:
+                            const Icon(
+                          Icons.stop,
+                        ),
+                        color:
+                            const Color(
+                                0xFFF36B6B),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          SizedBox(
+            width: double.infinity,
+            child:
+                ElevatedButton.icon(
+              onPressed: () {
+                stopAudio();
+
+                setState(() {
+                  materiAktif = null;
+                });
+              },
+              icon:
+                  const Icon(
+                Icons.arrow_back,
+              ),
+              label:
+                  const Text(
+                'Kembali ke Daftar Materi',
+              ),
+              style:
+                  ElevatedButton.styleFrom(
+                backgroundColor:
+                    const Color(
+                        0xFF1E60BE),
+                foregroundColor:
+                    Colors.white,
+                padding:
+                    const EdgeInsets
+                        .symmetric(
+                  vertical: 15,
+                ),
+                shape:
+                    RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.circular(
+                          15),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // HALAMAN KOSONG
+  // ============================================================
+
+  Widget halamanKosong() {
+    final namaKategori =
+        kategoriDipilih[
+                'nama_kategori'] ??
+            kategoriDipilih['nama'] ??
+            'Kategori';
+
+    return Center(
+      child: Padding(
+        padding:
+            const EdgeInsets.all(25),
+        child: Column(
+          mainAxisAlignment:
+              MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 120,
+              height: 120,
+              decoration:
+                  BoxDecoration(
+                color: Colors.white
+                    .withOpacity(0.9),
+                shape:
+                    BoxShape.circle,
+              ),
+              child:
+                  const Icon(
+                Icons.menu_book,
+                size: 60,
+                color:
+                    Color(0xFF5EBEF3),
+              ),
+            ),
+
+            const SizedBox(
+                height: 25),
+
+            const Text(
+              'Belum Ada Materi',
+              style: TextStyle(
+                color:
+                    Colors.white,
+                fontSize: 25,
+                fontWeight:
+                    FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(
+                height: 10),
+
+            Text(
+              'Belum tersedia materi untuk kategori $namaKategori.',
+              textAlign:
+                  TextAlign.center,
+              style:
+                  const TextStyle(
+                color:
+                    Colors.white,
+                fontSize: 15,
+              ),
+            ),
+
+            const SizedBox(
+                height: 25),
+
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  kategoriDipilih =
+                      null;
+                  daftarMateri =
+                      [];
+                  materiAktif =
+                      null;
+                });
+              },
+              style:
+                  ElevatedButton.styleFrom(
+                backgroundColor:
+                    Colors.white,
+                foregroundColor:
+                    const Color(
+                        0xFF1E60BE),
+              ),
+              child:
+                  const Text(
+                'Pilih Kategori Lain',
+              ),
+            ),
+          ],
         ),
       ),
     );

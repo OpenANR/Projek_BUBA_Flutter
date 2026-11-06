@@ -5,15 +5,14 @@ import '../models/materi_model.dart';
 
 class MateriServices {
   // URL API Laravel
-  static const String baseUrl = 'http://http://127.0.0.1:8000/api';
+  static const String baseUrl = 'http://127.0.0.1:8000/api';
 
-  // Mengambil semua data materi
+  // Mengambil data materi berdasarkan kelas dan kategori
   Future<List<MateriModel>> getMateri({
     int? kelasId,
     int? kategoriId,
   }) async {
     try {
-      // Parameter untuk filter kelas dan kategori
       final queryParameters = <String, String>{};
 
       if (kelasId != null) {
@@ -29,6 +28,8 @@ class MateriServices {
             queryParameters.isEmpty ? null : queryParameters,
       );
 
+      print('Request API Materi: $uri');
+
       final response = await http.get(
         uri,
         headers: {
@@ -36,11 +37,12 @@ class MateriServices {
         },
       );
 
+      print('Status API Materi: ${response.statusCode}');
+      print('Response API Materi: ${response.body}');
+
       if (response.statusCode == 200) {
         final decodedData = jsonDecode(response.body);
 
-        // Menyesuaikan jika API menggunakan format pagination
-        // atau langsung mengembalikan array JSON
         final List<dynamic> data;
 
         if (decodedData is List) {
@@ -49,11 +51,17 @@ class MateriServices {
             decodedData['data'] is List) {
           data = decodedData['data'];
         } else {
-          throw Exception('Format data materi tidak sesuai');
+          throw Exception(
+            'Format data materi tidak sesuai',
+          );
         }
 
         return data
-            .map((json) => MateriModel.fromJson(json))
+            .map(
+              (json) => MateriModel.fromJson(
+                json as Map<String, dynamic>,
+              ),
+            )
             .toList();
       } else {
         throw Exception(
@@ -61,7 +69,9 @@ class MateriServices {
         );
       }
     } catch (e) {
-      throw Exception('Terjadi kesalahan: $e');
+      throw Exception(
+        'Terjadi kesalahan: $e',
+      );
     }
   }
 }
