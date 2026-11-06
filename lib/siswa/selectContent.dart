@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/kelas_model.dart';
 import 'selectClass.dart';
-import 'select_category.dart';
+import 'selectCategory.dart';
 import 'quis/quisList.dart';
 
 class SelectContent extends StatelessWidget {
