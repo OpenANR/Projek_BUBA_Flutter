@@ -1,11 +1,23 @@
+// ignore_for_file: unused_field
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-class SelectCategoryPage extends StatelessWidget {
-  const SelectCategoryPage({super.key, required this.className});
+import '../models/kategori_model.dart';
+import '../models/kelas_model.dart';
+import '../services/kategori_service.dart';
+import '../services/kelas_service.dart';
+
+class SelectCategoryPage extends StatefulWidget {
+  const SelectCategoryPage({
+    super.key,
+    required this.className,
+    this.onCategorySelected,
+  });
 
   final String className;
+  final ValueChanged<KategoriModel>? onCategorySelected;
 
   static const _classALessons = [
     _Lesson(title: 'MENGENAL\nHURUF', emoji: '🔠', color: Color(0xFFF00078)),
@@ -38,8 +50,47 @@ class SelectCategoryPage extends StatelessWidget {
   ];
 
   @override
+  State<SelectCategoryPage> createState() => _SelectCategoryPageState();
+}
+
+class _SelectCategoryPageState extends State<SelectCategoryPage> {
+  final KategoriService _kategoriService = KategoriService();
+  final KelasService _kelasService = KelasService();
+  late Future<List<KategoriModel>> _kategoriFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _kategoriFuture = _loadKategori();
+  }
+
+  Future<List<KategoriModel>> _loadKategori() async {
+    final classes = await _kelasService.getKelasSiswa();
+    final requested = widget.className.trim().toLowerCase();
+    KelasModel? selected;
+    for (final kelas in classes) {
+      final name = kelas.namaKelas.trim().toLowerCase();
+      if (name == requested || name.endsWith(requested)) {
+        selected = kelas;
+        break;
+      }
+    }
+    if (selected == null) {
+      throw KategoriServiceException(
+        'Kelas ${widget.className} tidak ditemukan dari API.',
+      );
+    }
+    return _kategoriService.getKategori(kelasId: selected.id);
+  }
+
+  void _reloadKategori() {
+    setState(() {
+      _kategoriFuture = _loadKategori();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final lessons = className == 'B' ? _classBLessons : _classALessons;
 
     return Scaffold(
       body: Stack(
@@ -85,7 +136,7 @@ class SelectCategoryPage extends StatelessWidget {
                       border: Border.all(color: Colors.white, width: 5),
                     ),
                     child: Text(
-                      'MATERI KELAS $className',
+                      'MATERI KELAS ${widget.className}',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white,
@@ -96,20 +147,50 @@ class SelectCategoryPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 28),
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: lessons.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 26,
-                          mainAxisSpacing: 24,
-                          childAspectRatio: 1.32,
-                        ),
-                    itemBuilder: (context, index) {
-                      final lesson = lessons[index];
-                      return _LessonCard(lesson: lesson);
+                  FutureBuilder<List<KategoriModel>>(
+                    future: _kategoriFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Padding(
+                          padding: EdgeInsets.all(40),
+                          child: CircularProgressIndicator(color: Colors.white),
+                        );
+                      }
+
+                      if (snapshot.hasError) {
+                        return _CategoryMessage(
+                          message: snapshot.error.toString(),
+                          onRetry: _reloadKategori,
+                        );
+                      }
+
+                      final categories = snapshot.data ?? const [];
+                      if (categories.isEmpty) {
+                        return const _CategoryMessage(
+                          message: 'Belum ada kategori untuk kelas ini.',
+                        );
+                      }
+
+                      return GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: categories.length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 26,
+                              mainAxisSpacing: 24,
+                              childAspectRatio: 1.32,
+                            ),
+                        itemBuilder: (context, index) {
+                          return _LessonCard(
+                            lesson: _Lesson.fromCategory(categories[index], index),
+                            onTap: () => widget.onCategorySelected?.call(
+                              categories[index],
+                            ),
+                          );
+                        },
+                      );
                     },
                   ),
                 ],
@@ -127,24 +208,81 @@ class _Lesson {
     required this.title,
     required this.emoji,
     required this.color,
+    this.kategoriId = 0,
   });
+
+  factory _Lesson.fromCategory(KategoriModel kategori, int index) {
+    const colors = [
+      Color(0xFFF00078),
+      Color(0xFF169B24),
+      Color(0xFF20399D),
+      Color(0xFFFFC400),
+      Color(0xFF159C6C),
+      Color(0xFF7100A5),
+      Color(0xFFEF6400),
+      Color(0xFFC90008),
+    ];
+    const emojis = ['🔤', '🔢', '🎨', '🔷', '🐕', '🧑', '🧼', '🌴'];
+
+    return _Lesson(
+      kategoriId: kategori.id,
+      title: kategori.namaKategori.toUpperCase(),
+      emoji: emojis[index % emojis.length],
+      color: colors[index % colors.length],
+    );
+  }
 
   final String title;
   final String emoji;
   final Color color;
+  final int kategoriId;
+}
+
+class _CategoryMessage extends StatelessWidget {
+  const _CategoryMessage({required this.message, this.onRetry});
+
+  final String message;
+  final VoidCallback? onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white),
+          ),
+          if (onRetry != null) ...[
+            const SizedBox(height: 12),
+            OutlinedButton(
+              onPressed: onRetry,
+              child: const Text('Coba lagi'),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
 class _LessonCard extends StatelessWidget {
-  const _LessonCard({required this.lesson});
+  const _LessonCard({required this.lesson, this.onTap});
 
   final _Lesson lesson;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: lesson.color,
       borderRadius: BorderRadius.circular(28),
-      child: Container(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(28),
+        child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(28),
           border: Border.all(color: Colors.white, width: 5),
@@ -167,6 +305,7 @@ class _LessonCard extends StatelessWidget {
             const SizedBox(height: 5),
             Text(lesson.emoji, style: const TextStyle(fontSize: 25)),
           ],
+        ),
         ),
       ),
     );
