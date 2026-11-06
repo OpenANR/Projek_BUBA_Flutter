@@ -1,6 +1,9 @@
 
 import 'package:flutter/material.dart';
 
+import '../../models/kategori_model.dart';
+import '../../services/kategori_service.dart';
+
 // Fungsi utama untuk menjalankan aplikasi Flutter
 void main() {
   runApp(const BubaApp());
@@ -53,17 +56,13 @@ class _MateriPageState extends State<MateriPage> {
 
   // Menyimpan pilihan kategori dan kelas yang dipilih pengguna
   // Nilai null berarti belum ada pilihan.
-  String? kategoriTerpilih;
+  int? kategoriTerpilih;
+  String? namaKategoriTerpilih;
   String? kelasTerpilih;
+  int kelasTerpilihId = 1;
 
-  // Daftar pilihan kategori untuk dropdown
-  // Data ini masih berupa contoh, belum dari database Laravel.
-  final List<String> kategoriList = [
-    'Huruf & Angka',
-    'Warna & Bentuk',
-    'Hewan & Tumbuhan',
-    'Anggota Tubuh',
-  ];
+  final KategoriService _kategoriService = KategoriService();
+  late Future<List<KategoriModel>> _kategoriFuture;
 
   // Daftar pilihan kelas untuk dropdown
   final List<String> kelasList = [
@@ -74,6 +73,18 @@ class _MateriPageState extends State<MateriPage> {
   // Menyimpan materi sementara selama aplikasi berjalan.
   // Data akan hilang jika aplikasi dimulai ulang.
   final List<Map<String, String>> daftarMateri = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _kategoriFuture = _kategoriService.getKategori(kelasId: kelasTerpilihId);
+  }
+
+  void muatUlangKategori() {
+    setState(() {
+      _kategoriFuture = _kategoriService.getKategori(kelasId: kelasTerpilihId);
+    });
+  }
 
   // Fungsi untuk memeriksa dan menyimpan materi
   void simpanMateri() {
@@ -99,7 +110,7 @@ class _MateriPageState extends State<MateriPage> {
       daftarMateri.add({
         'judul': judulController.text.trim(),
         'isi': isiController.text.trim(),
-        'kategori': kategoriTerpilih!,
+        'kategori': namaKategoriTerpilih!,
         'kelas': kelasTerpilih!,
       });
     });
@@ -111,6 +122,7 @@ class _MateriPageState extends State<MateriPage> {
     // Mengembalikan dropdown ke kondisi belum dipilih
     setState(() {
       kategoriTerpilih = null;
+      namaKategoriTerpilih = null;
       kelasTerpilih = null;
     });
 
@@ -206,36 +218,71 @@ class _MateriPageState extends State<MateriPage> {
                       const SizedBox(height: 8),
 
                       // Dropdown untuk memilih kategori materi
-                      DropdownButtonFormField<String>(
-                        value: kategoriTerpilih,
-                        isExpanded: true,
+                      FutureBuilder<List<KategoriModel>>(
+                        future: _kategoriFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const InputDecorator(
+                              decoration: InputDecoration(
+                                labelText: 'Kategori',
+                                prefixIcon: Icon(Icons.category_outlined),
+                                border: OutlineInputBorder(),
+                              ),
+                              child: LinearProgressIndicator(),
+                            );
+                          }
 
-                        // Tampilan kotak dropdown
-                        decoration: InputDecoration(
-                          hintText: 'Pilih kategori materi',
-                          prefixIcon:
-                              const Icon(Icons.category_outlined),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
+                          if (snapshot.hasError) {
+                            return InputDecorator(
+                              decoration: const InputDecoration(
+                                labelText: 'Kategori',
+                                prefixIcon: Icon(Icons.error_outline),
+                                border: OutlineInputBorder(),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Expanded(
+                                    child: Text('Kategori gagal dimuat.'),
+                                  ),
+                                  TextButton(
+                                    onPressed: muatUlangKategori,
+                                    child: const Text('Coba lagi'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
 
-                        // Mengubah setiap kategori menjadi pilihan dropdown
-                        items: kategoriList.map((kategori) {
-                          return DropdownMenuItem<String>(
-                            value: kategori,
-                            child: Text(kategori),
+                          final kategoriList = snapshot.data ?? const [];
+                          return DropdownButtonFormField<int>(
+                            initialValue: kategoriTerpilih,
+                            isExpanded: true,
+                            decoration: InputDecoration(
+                              hintText: 'Pilih kategori materi',
+                              prefixIcon: const Icon(Icons.category_outlined),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            items: kategoriList.map((kategori) {
+                              return DropdownMenuItem<int>(
+                                value: kategori.id,
+                                child: Text(kategori.namaKategori),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              final selected = kategoriList.firstWhere(
+                                (kategori) => kategori.id == value,
+                              );
+                              setState(() {
+                                kategoriTerpilih = value;
+                                namaKategoriTerpilih = selected.namaKategori;
+                              });
+                            },
                           );
-                        }).toList(),
-
-                        // Menyimpan kategori ketika pengguna memilihnya
-                        onChanged: (value) {
-                          setState(() {
-                            kategoriTerpilih = value;
-                          });
                         },
                       ),
-
                       const SizedBox(height: 18),
 
                       // Label dropdown kelas
@@ -244,7 +291,7 @@ class _MateriPageState extends State<MateriPage> {
 
                       // Dropdown untuk memilih kelas
                       DropdownButtonFormField<String>(
-                        value: kelasTerpilih,
+                        initialValue: kelasTerpilih,
                         isExpanded: true,
 
                         decoration: InputDecoration(
@@ -268,6 +315,12 @@ class _MateriPageState extends State<MateriPage> {
                         onChanged: (value) {
                           setState(() {
                             kelasTerpilih = value;
+                            kelasTerpilihId = value == 'Kelas B' ? 2 : 1;
+                            kategoriTerpilih = null;
+                            namaKategoriTerpilih = null;
+                            _kategoriFuture = _kategoriService.getKategori(
+                              kelasId: kelasTerpilihId,
+                            );
                           });
                         },
                       ),
