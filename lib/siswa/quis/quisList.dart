@@ -66,103 +66,168 @@ class _QuisListPageState extends State<QuisListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text(
-          'Daftar Kuis',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        centerTitle: true,
+        title: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 25,
+            vertical: 9,
+          ),
+          decoration: BoxDecoration(
+            color: const Color(0xFF2865CC),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: Colors.white, width: 3),
+          ),
+          child: const Text(
+            'DAFTAR KUIS',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 17,
+              letterSpacing: 1,
+            ),
+          ),
         ),
       ),
-      body: RefreshIndicator(
-        onRefresh: loadKuis,
-        child: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: Colors.blue,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            'assets/images/backgroundsplash.png',
+            fit: BoxFit.cover,
+          ),
+
+          SafeArea(
+            child: RefreshIndicator(
+              onRefresh: loadKuis,
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(20, 75, 20, 25),
                 children: [
-                  const Text(
-                    'Ayo Kerjakan Kuis!',
-                    style: TextStyle(
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2865CC),
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 4,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Ayo Kerjakan Kuis!',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${widget.namaKelas} • ${widget.namaKategori}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Uji pengetahuanmu dan kumpulkan bintang!',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 25),
+
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 17,
+                      vertical: 13,
+                    ),
+                    decoration: BoxDecoration(
                       color: Colors.white,
-                      fontSize: 21,
-                      fontWeight: FontWeight.bold,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: const Color(0xFF2865CC),
+                        width: 2,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Kuis Tersedia',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2459A6),
+                          ),
+                        ),
+                        Text(
+                          '${daftarKuis.length} Soal',
+                          style: const TextStyle(
+                            color: Color(0xFF2459A6),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${widget.namaKelas} • ${widget.namaKategori}',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Uji pengetahuanmu dan kumpulkan bintang!',
-                    style: TextStyle(color: Colors.white),
-                  ),
+
+                  const SizedBox(height: 15),
+
+                  if (loading)
+                    const Padding(
+                      padding: EdgeInsets.all(40),
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF2865CC),
+                        ),
+                      ),
+                    )
+                  else if (error != null)
+                    _buildError()
+                  else if (daftarKuis.isEmpty)
+                    _buildEmpty()
+                  else
+                    ...daftarKuis.map((kuis) => _buildCard(kuis)),
                 ],
               ),
             ),
-            const SizedBox(height: 22),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Kuis Tersedia',
-                  style: TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  '${daftarKuis.length} Soal',
-                  style: const TextStyle(color: Colors.grey),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-
-            if (loading)
-              const Padding(
-                padding: EdgeInsets.all(40),
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (error != null)
-              _buildError()
-            else if (daftarKuis.isEmpty)
-              _buildEmpty()
-            else
-              ...daftarKuis.map((kuis) => _buildCard(kuis)),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildCard(KuisModel kuis) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
+      margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFF2865CC),
+          width: 2.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 7,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -174,12 +239,12 @@ class _QuisListPageState extends State<QuisListPage> {
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 11,
-                  vertical: 6,
+                  horizontal: 12,
+                  vertical: 7,
                 ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF3E8FF),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
                   kuis.kodeKuis,
@@ -191,12 +256,15 @@ class _QuisListPageState extends State<QuisListPage> {
                 ),
               ),
               const Icon(
-                Icons.quiz_outlined,
-                color: Colors.blue,
+                Icons.quiz_rounded,
+                color: Color(0xFF2865CC),
+                size: 28,
               ),
             ],
           ),
+
           const SizedBox(height: 15),
+
           Text(
             kuis.pertanyaan,
             maxLines: 2,
@@ -204,14 +272,21 @@ class _QuisListPageState extends State<QuisListPage> {
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
+              color: Color(0xFF263238),
             ),
           ),
+
           const SizedBox(height: 15),
           const Divider(),
           const SizedBox(height: 5),
+
           const Row(
             children: [
-              Icon(Icons.menu_book, size: 18, color: Colors.grey),
+              Icon(
+                Icons.menu_book,
+                size: 18,
+                color: Colors.grey,
+              ),
               SizedBox(width: 7),
               Text(
                 'Pertanyaan kuis',
@@ -219,7 +294,9 @@ class _QuisListPageState extends State<QuisListPage> {
               ),
             ],
           ),
+
           const SizedBox(height: 15),
+
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -236,14 +313,24 @@ class _QuisListPageState extends State<QuisListPage> {
                   ),
                 );
               },
-              icon: const Icon(Icons.play_arrow),
-              label: const Text('Mulai Kuis'),
+              icon: const Icon(Icons.play_arrow_rounded),
+              label: const Text(
+                'Mulai Kuis',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
+                backgroundColor: const Color(0xFF2865CC),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(14),
+                  side: const BorderSide(
+                    color: Colors.white,
+                    width: 2,
+                  ),
                 ),
               ),
             ),
@@ -254,11 +341,19 @@ class _QuisListPageState extends State<QuisListPage> {
   }
 
   Widget _buildEmpty() {
-    return const Padding(
-      padding: EdgeInsets.all(35),
-      child: Column(
+    return Container(
+      padding: const EdgeInsets.all(30),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: const Column(
         children: [
-          Icon(Icons.quiz_outlined, size: 60, color: Colors.grey),
+          Icon(
+            Icons.quiz_outlined,
+            size: 60,
+            color: Colors.grey,
+          ),
           SizedBox(height: 12),
           Text(
             'Belum ada kuis tersedia',
@@ -270,17 +365,31 @@ class _QuisListPageState extends State<QuisListPage> {
   }
 
   Widget _buildError() {
-    return Column(
-      children: [
-        const Icon(Icons.error_outline, size: 50, color: Colors.red),
-        const SizedBox(height: 10),
-        Text(error!, textAlign: TextAlign.center),
-        const SizedBox(height: 12),
-        ElevatedButton(
-          onPressed: loadKuis,
-          child: const Text('Coba Lagi'),
-        ),
-      ],
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.error_outline,
+            size: 50,
+            color: Colors.red,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            error!,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: loadKuis,
+            child: const Text('Coba Lagi'),
+          ),
+        ],
+      ),
     );
   }
 }

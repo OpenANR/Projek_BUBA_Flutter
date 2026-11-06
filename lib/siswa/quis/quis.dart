@@ -28,10 +28,7 @@ class _QuisPageState extends State<QuisPage> {
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   int nomorSoal = 0;
-
-  // Menyimpan jawaban siswa berdasarkan ID soal.
   final Map<int, String> jawabanSiswa = {};
-
   bool isSubmitting = false;
 
   KuisModel get soal => widget.daftarKuis[nomorSoal];
@@ -42,7 +39,6 @@ class _QuisPageState extends State<QuisPage> {
     super.dispose();
   }
 
-  // Memutar audio pertanyaan atau pilihan.
   Future<void> putarAudio(String? url) async {
     if (url == null || url.isEmpty) return;
 
@@ -60,14 +56,12 @@ class _QuisPageState extends State<QuisPage> {
     }
   }
 
-  // Menyimpan jawaban siswa.
   void pilihJawaban(String pilihan) {
     setState(() {
       jawabanSiswa[soal.id] = pilihan;
     });
   }
 
-  // Berpindah ke soal selanjutnya.
   void soalSelanjutnya() {
     if (nomorSoal < widget.daftarKuis.length - 1) {
       setState(() {
@@ -76,7 +70,6 @@ class _QuisPageState extends State<QuisPage> {
     }
   }
 
-  // Kembali ke soal sebelumnya.
   void soalSebelumnya() {
     if (nomorSoal > 0) {
       setState(() {
@@ -85,7 +78,6 @@ class _QuisPageState extends State<QuisPage> {
     }
   }
 
-  // Konfirmasi sebelum mengumpulkan jawaban.
   Future<void> konfirmasiSelesai() async {
     final belumDijawab = widget.daftarKuis
         .where((item) => !jawabanSiswa.containsKey(item.id))
@@ -123,7 +115,6 @@ class _QuisPageState extends State<QuisPage> {
     await kirimJawaban();
   }
 
-  // Mengirim jawaban ke Laravel API.
   Future<void> kirimJawaban() async {
     if (jawabanSiswa.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -174,7 +165,6 @@ class _QuisPageState extends State<QuisPage> {
     }
   }
 
-  // Widget pilihan jawaban.
   Widget pilihanJawaban({
     required String kode,
     required String teks,
@@ -195,7 +185,7 @@ class _QuisPageState extends State<QuisPage> {
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: dipilih
-                ? Colors.blue
+                ? const Color(0xFF2865CC)
                 : Colors.grey.shade300,
             width: dipilih ? 2 : 1,
           ),
@@ -208,7 +198,7 @@ class _QuisPageState extends State<QuisPage> {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: dipilih
-                    ? Colors.blue
+                    ? const Color(0xFF2865CC)
                     : Colors.grey.shade100,
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -216,9 +206,7 @@ class _QuisPageState extends State<QuisPage> {
                 kode,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: dipilih
-                      ? Colors.white
-                      : Colors.black87,
+                  color: dipilih ? Colors.white : Colors.black87,
                 ),
               ),
             ),
@@ -237,13 +225,13 @@ class _QuisPageState extends State<QuisPage> {
                 onPressed: () => putarAudio(audio),
                 icon: const Icon(
                   Icons.volume_up,
-                  color: Colors.blue,
+                  color: Color(0xFF2865CC),
                 ),
               ),
             if (dipilih)
               const Icon(
                 Icons.check_circle,
-                color: Colors.blue,
+                color: Color(0xFF2865CC),
               ),
           ],
         ),
@@ -251,7 +239,6 @@ class _QuisPageState extends State<QuisPage> {
     );
   }
 
-  // Menampilkan gambar soal.
   Widget gambarSoal() {
     if (soal.gambarUrls.isEmpty) {
       return const SizedBox.shrink();
@@ -262,7 +249,11 @@ class _QuisPageState extends State<QuisPage> {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: const Color(0xFF2865CC),
+          width: 2,
+        ),
       ),
       child: Column(
         children: soal.gambarUrls.map((url) {
@@ -279,9 +270,7 @@ class _QuisPageState extends State<QuisPage> {
                   return const SizedBox(
                     height: 100,
                     child: Center(
-                      child: Text(
-                        'Gambar tidak dapat dimuat',
-                      ),
+                      child: Text('Gambar tidak dapat dimuat'),
                     ),
                   );
                 },
@@ -293,7 +282,6 @@ class _QuisPageState extends State<QuisPage> {
     );
   }
 
-  // Progress pengerjaan kuis.
   Widget progressSoal() {
     final total = widget.daftarKuis.length;
     final terjawab = jawabanSiswa.length;
@@ -302,7 +290,11 @@ class _QuisPageState extends State<QuisPage> {
       padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: const Color(0xFF2865CC),
+          width: 2,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -312,14 +304,12 @@ class _QuisPageState extends State<QuisPage> {
             children: [
               const Text(
                 'Progress Pengerjaan',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
               Text(
                 '$terjawab / $total',
                 style: const TextStyle(
-                  color: Colors.blue,
+                  color: Color(0xFF2865CC),
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -332,7 +322,7 @@ class _QuisPageState extends State<QuisPage> {
               value: total == 0 ? 0 : terjawab / total,
               minHeight: 9,
               backgroundColor: Colors.grey.shade200,
-              color: Colors.blue,
+              color: const Color(0xFF2865CC),
             ),
           ),
         ],
@@ -340,59 +330,55 @@ class _QuisPageState extends State<QuisPage> {
     );
   }
 
-  // Navigasi nomor soal.
   Widget navigasiNomorSoal() {
     return Wrap(
       spacing: 9,
       runSpacing: 9,
-      children: List.generate(
-        widget.daftarKuis.length,
-        (index) {
-          final item = widget.daftarKuis[index];
-          final aktif = index == nomorSoal;
-          final terjawab = jawabanSiswa.containsKey(item.id);
+      children: List.generate(widget.daftarKuis.length, (index) {
+        final item = widget.daftarKuis[index];
+        final aktif = index == nomorSoal;
+        final terjawab = jawabanSiswa.containsKey(item.id);
 
-          return InkWell(
-            onTap: isSubmitting
-                ? null
-                : () {
-                    setState(() {
-                      nomorSoal = index;
-                    });
-                  },
-            borderRadius: BorderRadius.circular(9),
-            child: Container(
-              width: 42,
-              height: 42,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
+        return InkWell(
+          onTap: isSubmitting
+              ? null
+              : () {
+                  setState(() {
+                    nomorSoal = index;
+                  });
+                },
+          borderRadius: BorderRadius.circular(9),
+          child: Container(
+            width: 42,
+            height: 42,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: aktif
+                  ? const Color(0xFF2865CC)
+                  : terjawab
+                      ? Colors.green.shade100
+                      : Colors.white,
+              borderRadius: BorderRadius.circular(9),
+              border: Border.all(
                 color: aktif
-                    ? Colors.blue
-                    : terjawab
-                        ? Colors.green.shade100
-                        : Colors.white,
-                borderRadius: BorderRadius.circular(9),
-                border: Border.all(
-                  color: aktif
-                      ? Colors.blue
-                      : Colors.grey.shade300,
-                ),
-              ),
-              child: Text(
-                '${index + 1}',
-                style: TextStyle(
-                  color: aktif
-                      ? Colors.white
-                      : terjawab
-                          ? Colors.green.shade800
-                          : Colors.black87,
-                  fontWeight: FontWeight.bold,
-                ),
+                    ? const Color(0xFF2865CC)
+                    : Colors.grey.shade300,
               ),
             ),
-          );
-        },
-      ),
+            child: Text(
+              '${index + 1}',
+              style: TextStyle(
+                color: aktif
+                    ? Colors.white
+                    : terjawab
+                        ? Colors.green.shade800
+                        : Colors.black87,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        );
+      }),
     );
   }
 
@@ -400,9 +386,7 @@ class _QuisPageState extends State<QuisPage> {
   Widget build(BuildContext context) {
     if (widget.daftarKuis.isEmpty) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Kuis'),
-        ),
+        appBar: AppBar(title: const Text('Kuis')),
         body: const Center(
           child: Text('Tidak ada soal tersedia.'),
         ),
@@ -412,225 +396,253 @@ class _QuisPageState extends State<QuisPage> {
     return PopScope(
       canPop: !isSubmitting,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F7FB),
+        extendBodyBehindAppBar: true,
+        backgroundColor: Colors.transparent,
         appBar: AppBar(
-          backgroundColor: Colors.blue,
+          backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
-          title: Text(
-            'Kuis ${widget.namaKategori}',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
+          elevation: 0,
+          centerTitle: true,
+          title: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 8,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2865CC),
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(color: Colors.white, width: 3),
+            ),
+            child: Text(
+              'KUIS ${widget.namaKategori.toUpperCase()}',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
             ),
           ),
         ),
         body: Stack(
           children: [
-            ListView(
-              padding: const EdgeInsets.all(18),
-              children: [
-                progressSoal(),
-                const SizedBox(height: 20),
-
-                // Kartu pertanyaan.
-                Container(
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 7,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF3E8FF),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              soal.kodeKuis,
-                              style: const TextStyle(
-                                color: Colors.deepPurple,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            'Soal ${nomorSoal + 1} '
-                            'dari ${widget.daftarKuis.length}',
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        'PERTANYAAN',
-                        style: TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        soal.pertanyaan,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          height: 1.5,
-                        ),
-                      ),
-                      if (soal.audioPertanyaanUrl != null &&
-                          soal.audioPertanyaanUrl!.isNotEmpty)
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: TextButton.icon(
-                            onPressed: () => putarAudio(
-                              soal.audioPertanyaanUrl,
-                            ),
-                            icon: const Icon(Icons.volume_up),
-                            label: const Text(
-                              'Dengarkan pertanyaan',
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 14),
-                gambarSoal(),
-
-                // Pilihan jawaban.
-                Container(
-                  padding: const EdgeInsets.all(17),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'PILIHAN JAWABAN',
-                        style: TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      pilihanJawaban(
-                        kode: 'A',
-                        teks: soal.pilihanA,
-                        audio: soal.audioPilihanAUrl,
-                      ),
-                      pilihanJawaban(
-                        kode: 'B',
-                        teks: soal.pilihanB,
-                        audio: soal.audioPilihanBUrl,
-                      ),
-                      pilihanJawaban(
-                        kode: 'C',
-                        teks: soal.pilihanC,
-                        audio: soal.audioPilihanCUrl,
-                      ),
-                      pilihanJawaban(
-                        kode: 'D',
-                        teks: soal.pilihanD,
-                        audio: soal.audioPilihanDUrl,
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 18),
-
-                // Nomor soal.
-                Container(
-                  padding: const EdgeInsets.all(17),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Nomor Soal',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      navigasiNomorSoal(),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 22),
-
-                // Tombol navigasi.
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: nomorSoal > 0 && !isSubmitting
-                            ? soalSebelumnya
-                            : null,
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 15,
-                          ),
-                          side: const BorderSide(
-                            color: Colors.blue,
-                          ),
-                        ),
-                        child: const Text('Sebelumnya'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: isSubmitting
-                            ? null
-                            : nomorSoal <
-                                    widget.daftarKuis.length - 1
-                                ? soalSelanjutnya
-                                : konfirmasiSelesai,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 15,
-                          ),
-                        ),
-                        child: Text(
-                          nomorSoal < widget.daftarKuis.length - 1
-                              ? 'Selanjutnya'
-                              : 'Selesai',
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 25),
-              ],
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/backgroundsplash.png',
+                fit: BoxFit.cover,
+              ),
             ),
 
-            // Loading ketika mengirim jawaban.
+            SafeArea(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 65, 16, 25),
+                children: [
+                  progressSoal(),
+                  const SizedBox(height: 18),
+
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: const Color(0xFF2865CC),
+                        width: 2,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 7,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF3E8FF),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                soal.kodeKuis,
+                                style: const TextStyle(
+                                  color: Colors.deepPurple,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              'Soal ${nomorSoal + 1} '
+                              'dari ${widget.daftarKuis.length}',
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          'PERTANYAAN',
+                          style: TextStyle(
+                            color: Color(0xFF2865CC),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          soal.pertanyaan,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            height: 1.5,
+                          ),
+                        ),
+                        if (soal.audioPertanyaanUrl != null &&
+                            soal.audioPertanyaanUrl!.isNotEmpty)
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: TextButton.icon(
+                              onPressed: () => putarAudio(
+                                soal.audioPertanyaanUrl,
+                              ),
+                              icon: const Icon(Icons.volume_up),
+                              label: const Text('Dengarkan pertanyaan'),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+                  gambarSoal(),
+
+                  Container(
+                    padding: const EdgeInsets.all(17),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: const Color(0xFF2865CC),
+                        width: 2,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'PILIHAN JAWABAN',
+                          style: TextStyle(
+                            color: Color(0xFF2865CC),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        pilihanJawaban(
+                          kode: 'A',
+                          teks: soal.pilihanA,
+                          audio: soal.audioPilihanAUrl,
+                        ),
+                        pilihanJawaban(
+                          kode: 'B',
+                          teks: soal.pilihanB,
+                          audio: soal.audioPilihanBUrl,
+                        ),
+                        pilihanJawaban(
+                          kode: 'C',
+                          teks: soal.pilihanC,
+                          audio: soal.audioPilihanCUrl,
+                        ),
+                        pilihanJawaban(
+                          kode: 'D',
+                          teks: soal.pilihanD,
+                          audio: soal.audioPilihanDUrl,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 18),
+
+                  Container(
+                    padding: const EdgeInsets.all(17),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: const Color(0xFF2865CC),
+                        width: 2,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Nomor Soal',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        navigasiNomorSoal(),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 22),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: nomorSoal > 0 && !isSubmitting
+                              ? soalSebelumnya
+                              : null,
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: const Color(0xFF2865CC),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 15,
+                            ),
+                            side: const BorderSide(
+                              color: Color(0xFF2865CC),
+                              width: 2,
+                            ),
+                          ),
+                          child: const Text('Sebelumnya'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: isSubmitting
+                              ? null
+                              : nomorSoal < widget.daftarKuis.length - 1
+                                  ? soalSelanjutnya
+                                  : konfirmasiSelesai,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2865CC),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 15,
+                            ),
+                          ),
+                          child: Text(
+                            nomorSoal < widget.daftarKuis.length - 1
+                                ? 'Selanjutnya'
+                                : 'Selesai',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
             if (isSubmitting)
               Container(
                 color: Colors.black38,
