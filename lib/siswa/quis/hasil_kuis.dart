@@ -17,6 +17,10 @@ class HasilKuisPage extends StatelessWidget {
     this.namaKelas = '',
   });
 
+  static const Color _blue = Color(0xFF2865CC);
+  static const Color _darkBlue = Color(0xFF2459A6);
+  static const Color _orange = Color(0xFFFAA63A);
+
   int get totalSoal =>
       int.tryParse('${hasil['total_soal'] ?? 0}') ?? 0;
 
@@ -52,21 +56,25 @@ class HasilKuisPage extends StatelessWidget {
     }
   }
 
+  // JUDUL HALAMAN
   Widget _judulPill() {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: 25,
+        horizontal: 27,
         vertical: 11,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFF2865CC),
+        color: _blue,
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.white, width: 3),
+        border: Border.all(
+          color: Colors.white,
+          width: 3,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
+            blurRadius: 7,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -82,6 +90,7 @@ class HasilKuisPage extends StatelessWidget {
     );
   }
 
+  // KARTU UMUM
   Widget _kartu({
     required Widget child,
     EdgeInsets padding = const EdgeInsets.all(18),
@@ -89,13 +98,16 @@ class HasilKuisPage extends StatelessWidget {
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white, width: 3),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(23),
+        border: Border.all(
+          color: Colors.white,
+          width: 3,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 8,
+            color: Colors.black.withValues(alpha: 0.13),
+            blurRadius: 9,
             offset: const Offset(0, 4),
           ),
         ],
@@ -104,6 +116,7 @@ class HasilKuisPage extends StatelessWidget {
     );
   }
 
+  // KARTU STATISTIK
   Widget _statistikCard({
     required IconData icon,
     required Color warna,
@@ -111,18 +124,25 @@ class HasilKuisPage extends StatelessWidget {
     required int nilai,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(
+        vertical: 16,
+        horizontal: 5,
+      ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: warna.withValues(alpha: 0.09),
         borderRadius: BorderRadius.circular(17),
         border: Border.all(
-          color: warna.withValues(alpha: 0.3),
+          color: warna.withValues(alpha: 0.35),
           width: 2,
         ),
       ),
       child: Column(
         children: [
-          Icon(icon, color: warna, size: 29),
+          Icon(
+            icon,
+            color: warna,
+            size: 29,
+          ),
           const SizedBox(height: 9),
           Text(
             '$nilai',
@@ -151,32 +171,49 @@ class HasilKuisPage extends StatelessWidget {
     return PopScope(
       canPop: false,
       child: Scaffold(
+        backgroundColor: Colors.transparent,
         body: Stack(
           fit: StackFit.expand,
           children: [
+            // BACKGROUND
             Image.asset(
-              'assets/images/backgroundsplash.png',
+              'assets/images/backgroundSplash.png',
               fit: BoxFit.cover,
             ),
+
             SafeArea(
               child: Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(15, 12, 15, 15),
-                    child: Center(child: _judulPill()),
+                    padding: const EdgeInsets.fromLTRB(
+                      15,
+                      12,
+                      15,
+                      15,
+                    ),
+                    child: Center(
+                      child: _judulPill(),
+                    ),
                   ),
+
                   Expanded(
                     child: ListView(
-                      padding: const EdgeInsets.fromLTRB(18, 5, 18, 25),
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(
+                        18,
+                        5,
+                        18,
+                        25,
+                      ),
                       children: [
-                        // Kartu hasil nilai.
+                        // KARTU NILAI
                         _kartu(
                           padding: const EdgeInsets.all(22),
                           child: Column(
                             children: [
                               Container(
-                                width: 95,
-                                height: 95,
+                                width: 100,
+                                height: 100,
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFFFF0C2),
                                   shape: BoxShape.circle,
@@ -184,25 +221,38 @@ class HasilKuisPage extends StatelessWidget {
                                     color: Colors.amber,
                                     width: 3,
                                   ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.orange.withValues(
+                                        alpha: 0.15,
+                                      ),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
                                 ),
                                 child: Icon(
                                   skor >= 70
                                       ? Icons.emoji_events_rounded
                                       : Icons.school_rounded,
-                                  size: 55,
+                                  size: 57,
                                   color: Colors.orange,
                                 ),
                               ),
+
                               const SizedBox(height: 17),
+
                               const Text(
                                 'Kuis Selesai!',
                                 style: TextStyle(
                                   fontSize: 25,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF2865CC),
+                                  color: _blue,
                                 ),
                               ),
+
                               const SizedBox(height: 8),
+
                               Text(
                                 pesanHasil,
                                 textAlign: TextAlign.center,
@@ -212,40 +262,63 @@ class HasilKuisPage extends StatelessWidget {
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
+
                               const SizedBox(height: 22),
-                              const Text(
-                                'NILAI KAMU',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.5,
+
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 7,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE5F3FF),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Text(
+                                  'NILAI KAMU',
+                                  style: TextStyle(
+                                    color: _darkBlue,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.5,
+                                  ),
                                 ),
                               ),
-                              const SizedBox(height: 3),
+
+                              const SizedBox(height: 5),
+
                               Text(
                                 '$skor',
                                 style: const TextStyle(
                                   fontSize: 65,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF2865CC),
+                                  color: _blue,
                                 ),
                               ),
+
                               const Text(
                                 'dari 100',
-                                style: TextStyle(color: Colors.grey),
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                ),
                               ),
+
                               const SizedBox(height: 22),
+
                               const Text(
                                 'Bintang yang Kamu Dapatkan',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
+                                  color: _darkBlue,
                                 ),
                               ),
+
                               const SizedBox(height: 13),
+
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.center,
                                 children: List.generate(5, (index) {
                                   return Padding(
                                     padding: const EdgeInsets.symmetric(
@@ -255,40 +328,55 @@ class HasilKuisPage extends StatelessWidget {
                                       index < jumlahBintang
                                           ? Icons.star_rounded
                                           : Icons.star_border_rounded,
-                                      size: 38,
+                                      size: 39,
                                       color: Colors.amber,
                                     ),
                                   );
                                 }),
                               ),
+
                               const SizedBox(height: 10),
+
                               Text(
                                 '$jumlahBintang dari 5 bintang',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.orange,
+                                  color: _orange,
+                                  fontSize: 14,
                                 ),
                               ),
                             ],
                           ),
                         ),
 
-                        const SizedBox(height: 17),
+                        const SizedBox(height: 18),
 
-                        // Rincian hasil.
+                        // RINCIAN HASIL
                         _kartu(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Rincian Hasil',
-                                style: TextStyle(
-                                  fontSize: 19,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF2865CC),
-                                ),
+                              const Row(
+                                children: [
+                                  Icon(
+                                    Icons.bar_chart_rounded,
+                                    color: _blue,
+                                    size: 25,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Rincian Hasil',
+                                    style: TextStyle(
+                                      fontSize: 19,
+                                      fontWeight: FontWeight.bold,
+                                      color: _blue,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 15),
+
+                              const SizedBox(height: 17),
+
                               Row(
                                 children: [
                                   Expanded(
@@ -312,7 +400,7 @@ class HasilKuisPage extends StatelessWidget {
                                   Expanded(
                                     child: _statistikCard(
                                       icon: Icons.quiz_rounded,
-                                      warna: Colors.blue,
+                                      warna: _blue,
                                       judul: 'Total',
                                       nilai: totalSoal,
                                     ),
@@ -323,35 +411,51 @@ class HasilKuisPage extends StatelessWidget {
                           ),
                         ),
 
-                        const SizedBox(height: 17),
+                        const SizedBox(height: 18),
 
-                        // Status reward.
+                        // STATUS REWARD
                         _kartu(
                           child: Container(
-                            padding: const EdgeInsets.all(14),
+                            padding: const EdgeInsets.all(15),
                             decoration: BoxDecoration(
                               color: terkunci
                                   ? const Color(0xFFE8F5E9)
                                   : const Color(0xFFFFF3E0),
-                              borderRadius: BorderRadius.circular(15),
+                              borderRadius: BorderRadius.circular(17),
                               border: Border.all(
                                 color: terkunci
                                     ? Colors.green.shade200
                                     : Colors.orange.shade200,
+                                width: 2,
                               ),
                             ),
                             child: Row(
                               children: [
-                                Icon(
-                                  terkunci
-                                      ? Icons.lock_open_rounded
-                                      : Icons.lock_outline_rounded,
-                                  size: 38,
-                                  color: terkunci
-                                      ? Colors.green
-                                      : Colors.orange,
+                                Container(
+                                  width: 55,
+                                  height: 55,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: terkunci
+                                          ? Colors.green.shade200
+                                          : Colors.orange.shade200,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    terkunci
+                                        ? Icons.lock_open_rounded
+                                        : Icons.lock_outline_rounded,
+                                    size: 30,
+                                    color: terkunci
+                                        ? Colors.green
+                                        : Colors.orange,
+                                  ),
                                 ),
+
                                 const SizedBox(width: 13),
+
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment:
@@ -369,7 +473,9 @@ class HasilKuisPage extends StatelessWidget {
                                               : Colors.orange.shade800,
                                         ),
                                       ),
+
                                       const SizedBox(height: 5),
+
                                       Text(
                                         terkunci
                                             ? 'Selamat! Kamu berhasil mendapatkan minimal 3 bintang.'
@@ -377,6 +483,7 @@ class HasilKuisPage extends StatelessWidget {
                                         style: const TextStyle(
                                           fontSize: 12,
                                           height: 1.5,
+                                          color: Color(0xFF555555),
                                         ),
                                       ),
                                     ],
@@ -387,9 +494,9 @@ class HasilKuisPage extends StatelessWidget {
                           ),
                         ),
 
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 22),
 
-                        // Tombol kembali ke daftar kuis.
+                        // TOMBOL KEMBALI
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
@@ -407,7 +514,10 @@ class HasilKuisPage extends StatelessWidget {
                                 (route) => route.isFirst,
                               );
                             },
-                            icon: const Icon(Icons.refresh_rounded),
+                            icon: const Icon(
+                              Icons.refresh_rounded,
+                              size: 23,
+                            ),
                             label: const Text(
                               'Kembali ke Daftar Kuis',
                               style: TextStyle(
@@ -416,13 +526,14 @@ class HasilKuisPage extends StatelessWidget {
                               ),
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF2865CC),
+                              backgroundColor: _blue,
                               foregroundColor: Colors.white,
+                              elevation: 4,
                               padding: const EdgeInsets.symmetric(
                                 vertical: 16,
                               ),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(17),
+                                borderRadius: BorderRadius.circular(18),
                                 side: const BorderSide(
                                   color: Colors.white,
                                   width: 3,
@@ -432,7 +543,8 @@ class HasilKuisPage extends StatelessWidget {
                           ),
                         ),
 
-                        const SizedBox(height: 13),
+                        const SizedBox(height: 15),
+
                         const Center(
                           child: Text(
                             'Terus belajar dan kumpulkan bintang!',

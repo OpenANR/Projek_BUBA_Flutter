@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 
 class AuthServices {
-  static const String baseUrl = 'http://10.10.191.206:8000/api';
+  static const String baseUrl = 'http://192.168.0.111:8000/api';
 
   Future<String?> login(String email, String password) async {
     try {

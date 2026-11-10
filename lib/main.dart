@@ -4,8 +4,6 @@ import 'auth/auth_page.dart';
 // import 'siswa/splash.dart';
 // import 'siswa/selectContent.dart';
 
-import 'auth/auth_page.dart';
-
 // import 'siswa/splash.dart';
 // import 'siswa/selectContent.dart';
 
