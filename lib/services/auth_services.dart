@@ -1,15 +1,26 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/user_model.dart';
 
-class AuthServices {
-  static const String baseUrl = 'http://10.10.191.206:8000/api';
+class AuthResult {
+  final bool isSuccess;
+  final bool isEmailVerified;
+  final String? errorMessage;
 
-  Future<String?> login(String email, String password) async {
+  AuthResult({
+    required this.isSuccess,
+    this.isEmailVerified = true,
+    this.errorMessage,
+  });
+}
+
+class AuthServices {
+  static const String baseUrl = 'http://192.168.1.14:8000/api';
+
+  Future<AuthResult> login(String email, String password) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/login'),
@@ -23,40 +34,66 @@ class AuthServices {
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
         if (decoded is! Map<String, dynamic>) {
-          return 'Format respons login dari server tidak valid.';
+          return AuthResult(
+            isSuccess: false,
+            errorMessage: 'Format respons login dari server tidak valid.',
+          );
         }
         final data = decoded;
         final token = data['token'] ?? data['access_token'];
         if (token is! String || token.isEmpty) {
-          return 'Token login tidak ditemukan dalam respons server.';
+          return AuthResult(
+            isSuccess: false,
+            errorMessage: 'Token login tidak ditemukan dalam respons server.',
+          );
         }
-        final userData = data['user'];
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
+
+        final bool isEmailVerified = data['email_verified'] == true;
+        final userData = data['user'];
 
         if (userData != null) {
           UserModel user = UserModel.fromMap(userData);
           await prefs.setString('user_data', user.toJson());
         }
 
-        return null;
+        return AuthResult(
+          isSuccess: true,
+          isEmailVerified: isEmailVerified,
+        );
       }
 
       try {
         final decoded = jsonDecode(response.body);
         if (decoded is Map<String, dynamic> && decoded['message'] != null) {
-          return decoded['message'].toString();
+          return AuthResult(
+            isSuccess: false,
+            errorMessage: decoded['message'].toString(),
+          );
         }
       } on FormatException {
-        return 'Login gagal (HTTP ${response.statusCode}). Periksa alamat dan port server API.';
+        return AuthResult(
+          isSuccess: false,
+          errorMessage: 'Login gagal (HTTP ${response.statusCode}). Periksa alamat dan port server API.',
+        );
       }
 
-      return 'Login gagal (HTTP ${response.statusCode}).';
+      return AuthResult(
+        isSuccess: false,
+        errorMessage: 'Login gagal (HTTP ${response.statusCode}).',
+      );
     } on FormatException {
-      return 'Format respons login dari server tidak valid.';
+      return AuthResult(
+        isSuccess: false,
+        errorMessage: 'Format respons login dari server tidak valid.',
+      );
     } catch (e) {
-      return 'Tidak bisa terhubung ke server. $e';
+      return AuthResult(
+        isSuccess: false,
+        errorMessage: 'Tidak bisa terhubung ke server. $e',
+      );
     }
   }
 
@@ -72,6 +109,60 @@ class AuthServices {
       return UserModel.fromJson(userJson);
     }
     return null;
+  }
+
+  static Future<bool> checkVerificationStatus() async {
+    try {
+      final token = await getToken();
+      if (token == null) return false;
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/email/status'),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map<String, dynamic> && decoded['email_verified'] == true) {
+          final userData = decoded['user'];
+          if (userData != null) {
+            final prefs = await SharedPreferences.getInstance();
+            UserModel user = UserModel.fromMap(userData);
+            await prefs.setString('user_data', user.toJson());
+          }
+          return true;
+        }
+      }
+    } catch (e) {
+      print('Error checking verification status: $e');
+    }
+    return false;
+  }
+
+  static Future<String?> resendVerificationEmail() async {
+    try {
+      final token = await getToken();
+      if (token == null) return 'Token tidak ditemukan. Silakan login kembali.';
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/email/resend'),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map<String, dynamic> && decoded['message'] != null) {
+        return decoded['message'].toString();
+      }
+      return 'Email verifikasi berhasil dikirim ulang.';
+    } catch (e) {
+      return 'Gagal menghubungi server untuk kirim ulang email: $e';
+    }
   }
 
   static Future<bool> logout() async {

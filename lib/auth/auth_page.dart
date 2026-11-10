@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/auth_services.dart';
 import '../siswa/splash.dart';
+import 'email_verification_page.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -31,7 +32,7 @@ class _AuthPageState extends State<AuthPage> {
 
     setState(() => _isLoading = true);
 
-    final error = await _authServices.login(
+    final result = await _authServices.login(
       _emailController.text.trim(),
       _passwordController.text,
     );
@@ -39,14 +40,30 @@ class _AuthPageState extends State<AuthPage> {
     if (!mounted) return;
     setState(() => _isLoading = false);
 
-    if (error == null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const SplashPage()),
-      );
+    if (result.isSuccess) {
+      if (result.isEmailVerified) {
+        // Jika email sudah terverifikasi, langsung ke halaman Siswa
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const SplashPage()),
+        );
+      } else {
+        // Jika belum terverifikasi, arahkan ke Halaman Verifikasi Email
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EmailVerificationPage(
+              email: _emailController.text.trim(),
+            ),
+          ),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text(result.errorMessage ?? 'Login gagal.'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
