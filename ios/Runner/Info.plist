@@ -17,7 +17,7 @@
 	<key>CFBundleName</key>
 	<string>buba_projek</string>
 	<key>CFBundlePackageType</key>
-	<string>APPL</string>
+	<string>BUBA</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
