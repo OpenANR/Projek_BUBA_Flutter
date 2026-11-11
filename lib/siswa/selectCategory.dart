@@ -163,7 +163,7 @@ class _SelectCategoryPageState extends State<SelectCategoryPage> {
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
-                  'MATERI KELAS ${widget.className}'.toUpperCase(),
+                  'KATEGORI ${widget.className}'.toUpperCase(),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 20,
