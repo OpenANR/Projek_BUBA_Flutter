@@ -355,11 +355,21 @@ class SplashPage extends StatelessWidget {
 
                         // Footer Copyright
                         const Text(
-                          'BUBA E-Learning Application | version 1.0\n© 2026 NAJATIF. Politeknik Negeri Jember.',
+                          'BUBA E-Learning Application',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 11,
-                            fontStyle: FontStyle.italic,
+                            color: Color(0xFF64748B),
+                            fontWeight: FontWeight.bold,
+                            height: 1.4,
+                          ),
+                        ),
+
+                        Text(
+                         '© ${DateTime.now().year} NAJATIF. All rights reserved.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 11,
                             color: Color(0xFF64748B),
                             height: 1.4,
                           ),
