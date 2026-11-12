@@ -39,7 +39,7 @@ class KuisModel {
     return '${uri.scheme}://${uri.authority}/';
   }
 
-  // Mengubah path file Laravel menjadi URL yang bisa diakses Flutter.
+  // Membuat URL gambar. Bagian ini tetap menggunakan storage Laravel.
   static String? _makeMediaUrl(dynamic value, String baseUrl) {
     if (value == null) return null;
 
@@ -47,27 +47,74 @@ class KuisModel {
 
     if (path.isEmpty || path == 'null') return null;
 
+    final root = Uri.parse(baseUrl);
+    final serverRoot = _getServerRoot(baseUrl);
+
     final uri = Uri.tryParse(path);
 
-    // Jika API sudah mengirim URL lengkap, gunakan langsung.
     if (uri != null &&
         (uri.scheme == 'http' || uri.scheme == 'https')) {
+      final host = uri.host.toLowerCase();
+
+      if (host == '127.0.0.1' ||
+          host == 'localhost' ||
+          host == '0.0.0.0') {
+        return uri
+            .replace(
+              host: root.host,
+              port: root.hasPort ? root.port : null,
+            )
+            .toString();
+      }
+
       return path;
     }
 
-    final root = _getServerRoot(baseUrl);
-
     String cleanPath = path.replaceAll('\\', '/');
-
-    // Hilangkan slash di awal.
     cleanPath = cleanPath.replaceFirst(RegExp(r'^/+'), '');
 
-    // Jika path belum memiliki folder storage, tambahkan.
     if (!cleanPath.startsWith('storage/')) {
       cleanPath = 'storage/$cleanPath';
     }
 
-    return Uri.parse(root).resolve(Uri.encodeFull(cleanPath)).toString();
+    return Uri.parse(serverRoot)
+        .resolve(Uri.encodeFull(cleanPath))
+        .toString();
+  }
+
+  // Membuat URL audio melalui route Laravel khusus agar tidak terkena CORS.
+  static String? _makeAudioUrl(dynamic value, String baseUrl) {
+    if (value == null) return null;
+
+    final path = value.toString().trim();
+
+    if (path.isEmpty || path == 'null') return null;
+
+    final root = Uri.parse(baseUrl);
+    final serverRoot = _getServerRoot(baseUrl);
+
+    final uri = Uri.tryParse(path);
+
+    String filePath;
+
+    if (uri != null &&
+        (uri.scheme == 'http' || uri.scheme == 'https')) {
+      filePath = uri.path;
+    } else {
+      filePath = path;
+    }
+
+    filePath = filePath.replaceAll('\\', '/');
+
+    // Mengambil nama file audio saja.
+    final filename = filePath.split('/').last;
+
+    if (filename.isEmpty) return null;
+
+    // Audio menggunakan route khusus Laravel.
+    return Uri.parse(serverRoot)
+        .resolve('audio-kuis/${Uri.encodeComponent(filename)}')
+        .toString();
   }
 
   // Membaca gambar dalam bentuk List, JSON String, atau satu path.
@@ -107,14 +154,14 @@ class KuisModel {
 
       pertanyaan: map['pertanyaan']?.toString() ?? '',
 
-      // Mendukung format gambar dari website maupun API.
+      // Gambar tetap menggunakan URL storage Laravel.
       gambarUrls: _getImages(
         map['gambar_urls'] ?? map['gambar'],
         baseUrl,
       ),
 
-      // Audio pertanyaan.
-      audioPertanyaanUrl: _makeMediaUrl(
+      // Audio pertanyaan menggunakan route khusus.
+      audioPertanyaanUrl: _makeAudioUrl(
         map['audio_pertanyaan_url'] ?? map['audio_pertanyaan'],
         baseUrl,
       ),
@@ -124,23 +171,23 @@ class KuisModel {
       pilihanC: map['pilihan_c']?.toString() ?? '',
       pilihanD: map['pilihan_d']?.toString() ?? '',
 
-      // Audio setiap pilihan jawaban.
-      audioPilihanAUrl: _makeMediaUrl(
+      // Audio setiap pilihan jawaban menggunakan route khusus.
+      audioPilihanAUrl: _makeAudioUrl(
         map['audio_pilihan_a_url'] ?? map['audio_pilihan_a'],
         baseUrl,
       ),
 
-      audioPilihanBUrl: _makeMediaUrl(
+      audioPilihanBUrl: _makeAudioUrl(
         map['audio_pilihan_b_url'] ?? map['audio_pilihan_b'],
         baseUrl,
       ),
 
-      audioPilihanCUrl: _makeMediaUrl(
+      audioPilihanCUrl: _makeAudioUrl(
         map['audio_pilihan_c_url'] ?? map['audio_pilihan_c'],
         baseUrl,
       ),
 
-      audioPilihanDUrl: _makeMediaUrl(
+      audioPilihanDUrl: _makeAudioUrl(
         map['audio_pilihan_d_url'] ?? map['audio_pilihan_d'],
         baseUrl,
       ),

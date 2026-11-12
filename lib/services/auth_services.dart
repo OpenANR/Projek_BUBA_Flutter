@@ -18,7 +18,7 @@ class AuthResult {
 }
 
 class AuthServices {
-  static const String baseUrl = 'http://10.10.190.57:8000/api';
+  static const String baseUrl = 'http://192.168.0.111:8000/api';
 
   Future<AuthResult> login(String email, String password) async {
     try {

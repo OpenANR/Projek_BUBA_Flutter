@@ -79,8 +79,13 @@ class _QuisPageState extends State<QuisPage> {
         isPlayingAudio = true;
       });
 
+      debugPrint('Memutar audio: ${url.trim()}');
+
       await _audioPlayer.play(
-        UrlSource(url.trim()),
+        UrlSource(
+          url.trim(),
+          mimeType: 'audio/mpeg',
+        ),
       );
     } catch (e) {
       if (!mounted) return;
@@ -565,72 +570,80 @@ class _QuisPageState extends State<QuisPage> {
           ),
           const SizedBox(height: 12),
           ...gambar.map(
-            (url) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  width: double.infinity,
-                  constraints: const BoxConstraints(
-                    minHeight: 100,
-                    maxHeight: 260,
-                  ),
-                  color: const Color(0xFFF5F8FC),
-                  child: Image.network(
-                    url,
-                    width: double.infinity,
-                    fit: BoxFit.contain,
-                    loadingBuilder: (
-                      context,
-                      child,
-                      loadingProgress,
-                    ) {
-                      if (loadingProgress == null) {
-                        return child;
-                      }
+            (url) {
+              debugPrint('URL GAMBAR: $url');
 
-                      return const SizedBox(
-                        height: 180,
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            color: _blue,
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    width: double.infinity,
+                    constraints: const BoxConstraints(
+                      minHeight: 100,
+                      maxHeight: 300,
+                    ),
+                    color: const Color(0xFFF5F8FC),
+                    child: Image.network(
+                      url,
+                      width: double.infinity,
+                      fit: BoxFit.contain,
+                      webHtmlElementStrategy:
+                          WebHtmlElementStrategy.prefer,
+                      loadingBuilder: (
+                        context,
+                        child,
+                        loadingProgress,
+                      ) {
+                        if (loadingProgress == null) {
+                          return child;
+                        }
+
+                        return const SizedBox(
+                          height: 180,
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: _blue,
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                    errorBuilder: (
-                      context,
-                      error,
-                      stackTrace,
-                    ) {
-                      return const SizedBox(
-                        height: 130,
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.broken_image_rounded,
-                                size: 38,
-                                color: Colors.grey,
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                'Gambar tidak dapat dimuat',
-                                style: TextStyle(
+                        );
+                      },
+                      errorBuilder: (
+                        context,
+                        error,
+                        stackTrace,
+                      ) {
+                        debugPrint('ERROR GAMBAR: $error');
+
+                        return const SizedBox(
+                          height: 150,
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.broken_image_rounded,
+                                  size: 42,
                                   color: Colors.grey,
-                                  fontWeight: FontWeight.w600,
                                 ),
-                              ),
-                            ],
+                                SizedBox(height: 8),
+                                Text(
+                                  'Gambar tidak dapat dimuat',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ],
       ),
