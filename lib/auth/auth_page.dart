@@ -52,9 +52,8 @@ class _AuthPageState extends State<AuthPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => EmailVerificationPage(
-              email: _emailController.text.trim(),
-            ),
+            builder: (context) =>
+                EmailVerificationPage(email: _emailController.text.trim()),
           ),
         );
       }
@@ -72,22 +71,9 @@ class _AuthPageState extends State<AuthPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'BUBA | Login',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'by : Najatif_2026',
-              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-            ),
-          ],
+        title: Center(
+          child: Text('Welcome to BUBA'),
         ),
-        backgroundColor: Colors.blue,
-        titleTextStyle: const TextStyle(color: Colors.white, fontSize: 20),
       ),
       body: SafeArea(
         child: Form(
@@ -191,6 +177,19 @@ class _AuthPageState extends State<AuthPage> {
                           color: Colors.white,
                         ),
                       ),
+              ),
+              SizedBox(height: 20),
+              Center(
+                child: Text(
+                  'BUBA E-Learning Application',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+
+              Center(
+                child: Text(
+                  '© ${DateTime.now().year} NAJATIF. All rights reserved.',
+                ),
               ),
             ],
           ),
