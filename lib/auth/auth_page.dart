@@ -70,11 +70,7 @@ class _AuthPageState extends State<AuthPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Center(
-          child: Text('Welcome to BUBA'),
-        ),
-      ),
+      appBar: AppBar(title: Center(child: Text('Welcome to BUBA'))),
       body: SafeArea(
         child: Form(
           key: _formKey,
@@ -188,7 +184,7 @@ class _AuthPageState extends State<AuthPage> {
 
               Center(
                 child: Text(
-                  '© ${DateTime.now().year} NAJATIF. All rights reserved.',
+                  '© ${DateTime.now().year} NAJATIF. All Rights Reserved.',
                 ),
               ),
             ],
