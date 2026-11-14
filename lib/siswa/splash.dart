@@ -145,8 +145,7 @@ class SplashPage extends StatelessWidget {
                               ),
                               children: [
                                 const TextSpan(
-                                  text:
-                                      'Halo Teman Belajar! 👋 Selamat datang di ',
+                                  text: 'Halo Teman Belajar! 👋 Selamat datang di ',
                                 ),
                                 const TextSpan(
                                   text: 'BUBA!',
@@ -156,8 +155,7 @@ class SplashPage extends StatelessWidget {
                                   ),
                                 ),
                                 const TextSpan(
-                                  text:
-                                      ' Media pembelajaran interaktif yang dirancang khusus untuk anak-anak dengan nuansa ceria, visual menyenangkan, dan penuh semangat!',
+                                  text: ' Media pembelajaran interaktif yang dirancang khusus untuk anak-anak dengan nuansa ceria, visual menyenangkan, dan penuh semangat!',
                                 ),
                               ],
                             ),
@@ -174,8 +172,7 @@ class SplashPage extends StatelessWidget {
                             final card1 = _buildFeatureCard(
                               iconEmoji: '📚',
                               title: 'Materi Menyenangkan',
-                              description:
-                                  'Belajar membaca, berhitung, mengenal hewan, sains, dan dunia sekitar melalui gambar penuh warna!',
+                              description: 'Belajar membaca, berhitung, mengenal hewan, sains, dan dunia sekitar melalui gambar penuh warna!',
                               titleColor: const Color(0xFF15803D),
                               borderColor: const Color(0xFF86EFAC),
                               bgColor: const Color(0xFFF0FDF4),
@@ -185,8 +182,7 @@ class SplashPage extends StatelessWidget {
                             final card2 = _buildFeatureCard(
                               iconEmoji: '🎮',
                               title: 'Kuis & Bintang Prestasi',
-                              description:
-                                  'Bermain kuis seru berhadiah bintang untuk mengasah pemahaman dengan penuh rasa percaya diri!',
+                              description: 'Bermain kuis seru berhadiah bintang untuk mengasah pemahaman dengan penuh rasa percaya diri!',
                               titleColor: const Color(0xFFC2410C),
                               borderColor: const Color(0xFFFDBA74),
                               bgColor: const Color(0xFFFFF7ED),
@@ -196,8 +192,7 @@ class SplashPage extends StatelessWidget {
                             final card3 = _buildFeatureCard(
                               iconEmoji: '🏫',
                               title: 'Tingkatan Belajar',
-                              description:
-                                  'Materi dan kuis disesuaikan berdasarkan kelas dan tahapan tumbuh kembang ananda.',
+                              description: 'Materi dan kuis disesuaikan berdasarkan kelas dan tahapan tumbuh kembang ananda.',
                               titleColor: const Color(0xFFBE123C),
                               borderColor: const Color(0xFFFCA5A5),
                               bgColor: const Color(0xFFFFF1F2),
@@ -207,8 +202,7 @@ class SplashPage extends StatelessWidget {
                             final card4 = _buildFeatureCard(
                               iconEmoji: '🚀',
                               title: 'Langkah Kecil, Impian Besar',
-                              description:
-                                  'Setiap langkah belajar hari ini adalah jembatan menuju mimpi besar di masa depan!',
+                              description: 'Setiap langkah belajar hari ini adalah jembatan menuju mimpi besar di masa depan!',
                               titleColor: const Color(0xFF0369A1),
                               borderColor: const Color(0xFF7DD3FC),
                               bgColor: const Color(0xFFF0F9FF),
@@ -321,9 +315,7 @@ class SplashPage extends StatelessWidget {
                                         color: Color(0xFFEA580C),
                                       ),
                                     ),
-                                    TextSpan(
-                                      text: ' untuk bermain tantangan.',
-                                    ),
+                                    TextSpan(text: ' untuk bermain tantangan.'),
                                   ],
                                 ),
                               ),
@@ -342,8 +334,7 @@ class SplashPage extends StatelessWidget {
                                       ),
                                     ),
                                     TextSpan(
-                                      text:
-                                          ' dan kategori favoritmu, lalu nikmati petualangan belajarmu!',
+                                      text: ' dan kategori favoritmu, lalu nikmati petualangan belajarmu!',
                                     ),
                                   ],
                                 ),
@@ -366,7 +357,7 @@ class SplashPage extends StatelessWidget {
                         ),
 
                         Text(
-                         '© ${DateTime.now().year} NAJATIF. All rights reserved.',
+                          '© ${DateTime.now().year} NAJATIF. All Rights Reserved.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 11,
@@ -547,10 +538,7 @@ class SplashPage extends StatelessWidget {
         Container(
           width: 20,
           height: 20,
-          decoration: BoxDecoration(
-            color: numberColor,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: numberColor, shape: BoxShape.circle),
           alignment: Alignment.center,
           child: Text(
             number,
@@ -624,10 +612,11 @@ class SplashPage extends StatelessWidget {
                       final user = snapshot.data;
                       final namaLengkap =
                           (user?.name != null && user!.name.trim().isNotEmpty)
-                              ? user.name
-                              : 'Juve Loiso Novelino';
+                          ? user.name
+                          : 'Juve Loiso Novelino';
                       final kelasRaw = user?.nama_kelas;
-                      final kelasSiswa = (kelasRaw != null &&
+                      final kelasSiswa =
+                          (kelasRaw != null &&
                               kelasRaw.isNotEmpty &&
                               kelasRaw != 'Belum Diatur')
                           ? kelasRaw
@@ -977,11 +966,7 @@ class SplashPage extends StatelessWidget {
               onTap: onTap,
               child: Padding(
                 padding: const EdgeInsets.all(9.0),
-                child: Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 24,
-                ),
+                child: Icon(icon, color: Colors.white, size: 24),
               ),
             ),
           ),
@@ -1075,8 +1060,14 @@ class SplashPage extends StatelessWidget {
                             Image.asset(
                               'assets/images/logoBuba.png',
                               width: isLandscape
-                                  ? (screenSize.width * 0.36).clamp(240.0, 420.0)
-                                  : (screenSize.width * 0.75).clamp(220.0, 360.0),
+                                  ? (screenSize.width * 0.36).clamp(
+                                      240.0,
+                                      420.0,
+                                    )
+                                  : (screenSize.width * 0.75).clamp(
+                                      220.0,
+                                      360.0,
+                                    ),
                               fit: BoxFit.contain,
                             ),
                             const SizedBox(height: 28),
@@ -1154,11 +1145,7 @@ class _StartPlayButtonState extends State<_StartPlayButton> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.play_arrow_rounded,
-                    color: Colors.white,
-                    size: 36,
-                  ),
+                  Icon(Icons.play_arrow_rounded, color: Colors.white, size: 36),
                   SizedBox(width: 8),
                   Text(
                     'MULAI',
