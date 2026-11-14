@@ -94,7 +94,9 @@ class _QuisPageState extends State<QuisPage> {
         isPlayingAudio = false;
       });
 
-      tampilkanPesan('Audio tidak dapat diputar. Periksa URL audio.');
+      tampilkanPesan(
+        'Audio tidak dapat diputar. Periksa URL audio.',
+      );
     }
   }
 
@@ -650,7 +652,7 @@ class _QuisPageState extends State<QuisPage> {
     );
   }
 
-  // ================= PILIHAN JAWABAN =================
+    // ================= PILIHAN JAWABAN =================
 
   Widget pilihanJawaban({
     required String kode,
@@ -678,7 +680,7 @@ class _QuisPageState extends State<QuisPage> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.07),
+              color: Colors.black.withOpacity(0.07),
               blurRadius: 5,
               offset: const Offset(0, 3),
             ),

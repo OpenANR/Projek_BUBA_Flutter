@@ -27,6 +27,7 @@ class _QuisListPageState extends State<QuisListPage> {
 
   List<KuisModel> daftarKuis = [];
   bool loading = true;
+  bool kategoriTerkunci = false;
   String? error;
 
   static const Color _blue = Color(0xFF2865CC);
@@ -41,13 +42,14 @@ class _QuisListPageState extends State<QuisListPage> {
     loadKuis();
   }
 
+  // MENGAMBIL DAFTAR KUIS DAN STATUS TERKUNCI
   Future<void> loadKuis() async {
-    if (mounted) {
-      setState(() {
-        loading = true;
-        error = null;
-      });
-    }
+    if (!mounted) return;
+
+    setState(() {
+      loading = true;
+      error = null;
+    });
 
     try {
       final data = await _services.getKuis(
@@ -59,6 +61,7 @@ class _QuisListPageState extends State<QuisListPage> {
 
       setState(() {
         daftarKuis = data;
+        kategoriTerkunci = _services.kategoriTerkunci;
         loading = false;
       });
     } catch (e) {
@@ -77,6 +80,16 @@ class _QuisListPageState extends State<QuisListPage> {
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
+        leadingWidth: 64,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: _BackButton(
+            onPressed: () {
+              Navigator.maybePop(context);
+            },
+          ),
+        ),
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -130,7 +143,16 @@ class _QuisListPageState extends State<QuisListPage> {
                   _buildWelcomeCard(),
                   const SizedBox(height: 22),
                   _buildInfoCard(),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 15),
+
+                  // PEMBERITAHUAN KATEGORI TERKUNCI
+                  if (!loading &&
+                      error == null &&
+                      kategoriTerkunci) ...[
+                    _buildLockedNotice(),
+                    const SizedBox(height: 15),
+                  ],
+
                   if (loading)
                     _buildLoading()
                   else if (error != null)
@@ -302,6 +324,65 @@ class _QuisListPageState extends State<QuisListPage> {
     );
   }
 
+  // PEMBERITAHUAN KATEGORI TERKUNCI
+  Widget _buildLockedNotice() {
+    return Container(
+      padding: const EdgeInsets.all(17),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF3E0),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: _orange,
+          width: 2.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.lock_rounded,
+            color: Color(0xFFE58A16),
+            size: 32,
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Kategori Kuis Terkunci!',
+                  style: TextStyle(
+                    color: Color(0xFFB86A0A),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  'Kamu sudah berhasil menyelesaikan kategori ini '
+                  'dengan minimal 3 bintang. Kuis tidak dapat '
+                  'dikerjakan kembali.',
+                  style: TextStyle(
+                    color: Color(0xFF795522),
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // KARTU SETIAP KUIS
   Widget _buildCard(KuisModel kuis, int index) {
     final colors = [
@@ -363,7 +444,9 @@ class _QuisListPageState extends State<QuisListPage> {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.quiz_rounded,
+                  kategoriTerkunci
+                      ? Icons.lock_rounded
+                      : Icons.quiz_rounded,
                   color: cardColor,
                   size: 26,
                 ),
@@ -407,38 +490,48 @@ class _QuisListPageState extends State<QuisListPage> {
             ],
           ),
           const SizedBox(height: 17),
+
+          // TOMBOL MULAI KUIS
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => QuisPage(
-                      quisId: kuis.id,
-                      kelasId: widget.kelasId,
-                      kategoriId: widget.kategoriId,
-                      namaKategori: widget.namaKategori,
-                      daftarKuis: daftarKuis,
-                    ),
-                  ),
-                );
-              },
-              icon: const Icon(
-                Icons.play_arrow_rounded,
+              onPressed: kategoriTerkunci
+                  ? null
+                  : () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => QuisPage(
+                            quisId: kuis.id,
+                            kelasId: widget.kelasId,
+                            kategoriId: widget.kategoriId,
+                            namaKategori: widget.namaKategori,
+                            daftarKuis: daftarKuis,
+                          ),
+                        ),
+                      );
+                    },
+              icon: Icon(
+                kategoriTerkunci
+                    ? Icons.lock_rounded
+                    : Icons.play_arrow_rounded,
                 size: 25,
               ),
-              label: const Text(
-                'Mulai Kuis',
-                style: TextStyle(
+              label: Text(
+                kategoriTerkunci
+                    ? 'Kuis Terkunci'
+                    : 'Mulai Kuis',
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: cardColor,
+                disabledBackgroundColor: Colors.grey.shade400,
                 foregroundColor: Colors.white,
-                elevation: 3,
+                disabledForegroundColor: Colors.white,
+                elevation: kategoriTerkunci ? 0 : 3,
                 padding: const EdgeInsets.symmetric(
                   vertical: 14,
                 ),
@@ -510,7 +603,8 @@ class _QuisListPageState extends State<QuisListPage> {
           ),
           SizedBox(height: 7),
           Text(
-            'Kuis untuk kategori ini belum tersedia. Yuk, cek lagi nanti!',
+            'Kuis untuk kategori ini belum tersedia. '
+            'Yuk, cek lagi nanti!',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.grey,
@@ -581,3 +675,33 @@ class _QuisListPageState extends State<QuisListPage> {
     );
   }
 }
+
+// TOMBOL KEMBALI SEPERTI TAMPILAN WEB
+class _BackButton extends StatelessWidget {
+  const _BackButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFF5EBEF3),
+      shape: const CircleBorder(
+        side: BorderSide(color: Colors.white, width: 3),
+      ),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onPressed,
+        child: const Padding(
+          padding: EdgeInsets.all(9),
+          child: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.white,
+            size: 20,
+          ),
+        ),
+      ),
+    );
+  }
+}
+

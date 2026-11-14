@@ -90,7 +90,6 @@ class KuisModel {
 
     if (path.isEmpty || path == 'null') return null;
 
-    final root = Uri.parse(baseUrl);
     final serverRoot = _getServerRoot(baseUrl);
 
     final uri = Uri.tryParse(path);

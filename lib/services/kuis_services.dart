@@ -7,6 +7,7 @@ import 'auth_services.dart';
 
 class KuisServices {
   static const String baseUrl = AuthServices.baseUrl;
+  bool kategoriTerkunci = false;
 
   Future<Map<String, String>> _headers() async {
     final token = await AuthServices.getToken();
@@ -59,6 +60,8 @@ class KuisServices {
     );
 
     final data = _decodeResponse(response);
+
+    kategoriTerkunci = data['terkunci'] == true;
 
     if (response.statusCode == 200 && data['success'] == true) {
       final List daftarSoal = data['data'] ?? [];
