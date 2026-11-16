@@ -507,6 +507,7 @@ class _QuisListPageState extends State<QuisListPage> {
                             kategoriId: widget.kategoriId,
                             namaKategori: widget.namaKategori,
                             daftarKuis: daftarKuis,
+                            namaKelas: widget.namaKelas,
                           ),
                         ),
                       );
@@ -704,4 +705,3 @@ class _BackButton extends StatelessWidget {
     );
   }
 }
-

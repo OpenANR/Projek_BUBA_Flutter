@@ -4,6 +4,7 @@ import '../models/kelas_model.dart';
 import 'selectClass.dart';
 import 'selectCategory.dart';
 import 'quis/quisList.dart';
+import 'riwayat_kuis.dart';
 
 class SelectContent extends StatelessWidget {
   const SelectContent({super.key});
@@ -244,11 +245,11 @@ class SelectContent extends StatelessWidget {
         height: cardHeight,
         isLandscape: isLandscape,
         onTap: () {
-          _showInfoDialog(
+          Navigator.push(
             context,
-            title: 'Riwayat Kuis',
-            message:
-                'Kamu bisa melihat skor dan hasil kuis sebelumnya di sini!',
+            MaterialPageRoute(
+              builder: (_) => const RiwayatKuisPage(),
+            ),
           );
         },
       ),

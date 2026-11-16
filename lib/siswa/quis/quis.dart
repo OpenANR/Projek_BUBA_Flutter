@@ -9,6 +9,7 @@ class QuisPage extends StatefulWidget {
   final int quisId;
   final int kelasId;
   final int kategoriId;
+  final String namaKelas;
   final String namaKategori;
   final List<KuisModel> daftarKuis;
 
@@ -18,6 +19,7 @@ class QuisPage extends StatefulWidget {
     required this.kelasId,
     required this.kategoriId,
     required this.namaKategori,
+    required this.namaKelas,
     required this.daftarKuis,
   });
 
@@ -36,6 +38,7 @@ class _QuisPageState extends State<QuisPage> {
   static const Color _cream = Color(0xFFFFF8EE);
 
   int nomorSoal = 0;
+
   final Map<int, String> jawabanSiswa = {};
 
   bool isSubmitting = false;
@@ -174,18 +177,28 @@ class _QuisPageState extends State<QuisPage> {
     });
   }
 
+  // ================= VALIDASI JAWABAN =================
+
+  bool semuaSoalSudahDijawab() {
+    return widget.daftarKuis.every(
+      (item) => jawabanSiswa.containsKey(item.id),
+    );
+  }
+
+  int get jumlahBelumDijawab {
+    return widget.daftarKuis
+        .where((item) => !jawabanSiswa.containsKey(item.id))
+        .length;
+  }
+
   // ================= SELESAI KUIS =================
 
   Future<void> konfirmasiSelesai() async {
     if (isSubmitting) return;
 
-    final belumDijawab = widget.daftarKuis
-        .where((item) => !jawabanSiswa.containsKey(item.id))
-        .length;
-
-    if (belumDijawab > 0) {
+    if (!semuaSoalSudahDijawab()) {
       tampilkanPesan(
-        'Masih ada $belumDijawab soal yang belum dijawab.',
+        'Masih ada $jumlahBelumDijawab soal yang belum dijawab.',
       );
       return;
     }
@@ -208,7 +221,9 @@ class _QuisPageState extends State<QuisPage> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
+            onPressed: () {
+              Navigator.pop(dialogContext, false);
+            },
             child: const Text(
               'Periksa Lagi',
               style: TextStyle(
@@ -225,7 +240,9 @@ class _QuisPageState extends State<QuisPage> {
                 borderRadius: BorderRadius.circular(14),
               ),
             ),
-            onPressed: () => Navigator.pop(dialogContext, true),
+            onPressed: () {
+              Navigator.pop(dialogContext, true);
+            },
             child: const Text('Ya, Selesai'),
           ),
         ],
@@ -235,11 +252,18 @@ class _QuisPageState extends State<QuisPage> {
     if (lanjut != true || !mounted) return;
 
     await hentikanAudio();
+
+    if (!mounted) return;
+
     await kirimJawaban();
   }
 
+  // ================= KIRIM JAWABAN =================
+
   Future<void> kirimJawaban() async {
-    if (jawabanSiswa.length != widget.daftarKuis.length) {
+    if (isSubmitting) return;
+
+    if (!semuaSoalSudahDijawab()) {
       tampilkanPesan('Pastikan semua soal sudah dijawab.');
       return;
     }
@@ -249,11 +273,23 @@ class _QuisPageState extends State<QuisPage> {
     });
 
     try {
+      // Pastikan jawaban hanya berisi ID soal yang sedang dikerjakan.
+      final Map<int, String> jawabanFinal = {
+        for (final item in widget.daftarKuis)
+          item.id: jawabanSiswa[item.id]!,
+      };
+
+      debugPrint('QUIZ ID: ${widget.quisId}');
+      debugPrint('KELAS ID: ${widget.kelasId}');
+      debugPrint('KATEGORI ID: ${widget.kategoriId}');
+      debugPrint('JUMLAH SOAL: ${widget.daftarKuis.length}');
+      debugPrint('JAWABAN: $jawabanFinal');
+
       final hasil = await _kuisServices.submitKuis(
         quisId: widget.quisId,
         kelasId: widget.kelasId,
         kategoriId: widget.kategoriId,
-        jawaban: jawabanSiswa,
+        jawaban: jawabanFinal,
       );
 
       if (!mounted) return;
@@ -266,6 +302,7 @@ class _QuisPageState extends State<QuisPage> {
             namaKategori: widget.namaKategori,
             kelasId: widget.kelasId,
             kategoriId: widget.kategoriId,
+            namaKelas: widget.namaKelas,
           ),
         ),
       );
@@ -376,7 +413,9 @@ class _QuisPageState extends State<QuisPage> {
 
   Widget progressSoal() {
     final total = widget.daftarKuis.length;
-    final terjawab = jawabanSiswa.length;
+    final terjawab = widget.daftarKuis
+        .where((item) => jawabanSiswa.containsKey(item.id))
+        .length;
 
     return _sectionCard(
       borderColor: _green,
@@ -652,7 +691,7 @@ class _QuisPageState extends State<QuisPage> {
     );
   }
 
-    // ================= PILIHAN JAWABAN =================
+  // ================= PILIHAN JAWABAN =================
 
   Widget pilihanJawaban({
     required String kode,
@@ -949,9 +988,7 @@ class _QuisPageState extends State<QuisPage> {
         const SizedBox(width: 12),
         Expanded(
           child: _NavigationButton(
-            label: soalTerakhir
-                ? 'SELESAI'
-                : 'SELANJUTNYA',
+            label: soalTerakhir ? 'SELESAI' : 'SELANJUTNYA',
             icon: soalTerakhir
                 ? Icons.flag_rounded
                 : Icons.arrow_forward_rounded,
