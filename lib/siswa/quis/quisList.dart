@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 
 import '../../models/kuis_model.dart';
@@ -74,6 +75,33 @@ class _QuisListPageState extends State<QuisListPage> {
     }
   }
 
+  // TOMBOL KEMBALI SAMA SEPERTI HALAMAN RIWAYAT
+  Widget tombolKembali(BuildContext context) {
+    return Material(
+      color: _lightBlue,
+      shape: const CircleBorder(
+        side: BorderSide(
+          color: Colors.white,
+          width: 4,
+        ),
+      ),
+      elevation: 5,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: () => Navigator.pop(context),
+        child: const SizedBox(
+          width: 48,
+          height: 48,
+          child: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.white,
+            size: 23,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -84,11 +112,7 @@ class _QuisListPageState extends State<QuisListPage> {
         leadingWidth: 64,
         leading: Padding(
           padding: const EdgeInsets.only(left: 8),
-          child: _BackButton(
-            onPressed: () {
-              Navigator.maybePop(context);
-            },
-          ),
+          child: tombolKembali(context),
         ),
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
@@ -672,35 +696,6 @@ class _QuisListPageState extends State<QuisListPage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// TOMBOL KEMBALI SEPERTI TAMPILAN WEB
-class _BackButton extends StatelessWidget {
-  const _BackButton({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: const Color(0xFF5EBEF3),
-      shape: const CircleBorder(
-        side: BorderSide(color: Colors.white, width: 3),
-      ),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onPressed,
-        child: const Padding(
-          padding: EdgeInsets.all(9),
-          child: Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: Colors.white,
-            size: 20,
-          ),
-        ),
       ),
     );
   }
