@@ -19,8 +19,6 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
   static const Color _blue = Color(0xFF1E60BE);
   static const Color _lightBlue = Color(0xFF5EBEF3);
   static const Color _green = Color(0xFF71BF4F);
-  static const Color _darkGreen = Color(0xFF62AA43);
-  static const Color _cream = Color(0xFFFFF8EE);
 
   @override
   void initState() {
@@ -119,12 +117,8 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
     );
   }
 
-  // Reward diperoleh dihitung dari riwayat dengan minimal 3 bintang.
-  int get totalReward {
-    return daftarRiwayat.where(
-      (item) => angka(item['jumlah_bintang']) >= 3,
-    ).length;
-  }
+  // Reward diperoleh dihitung 
+  int get totalReward => daftarRiwayat.length;
 
   int get rataRata {
     if (daftarRiwayat.isEmpty) return 0;

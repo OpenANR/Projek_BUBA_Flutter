@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import '../../models/kuis_model.dart';
@@ -74,28 +73,30 @@ class _QuisListPageState extends State<QuisListPage> {
       });
     }
   }
-
-  // TOMBOL KEMBALI SAMA SEPERTI HALAMAN RIWAYAT
+  
+  // TOMBOL KEMBALI
   Widget tombolKembali(BuildContext context) {
     return Material(
-      color: _lightBlue,
-      shape: const CircleBorder(
-        side: BorderSide(
-          color: Colors.white,
-          width: 4,
-        ),
-      ),
+      color: const Color(0xFF5EBEF3),
+      shape: const CircleBorder(),
       elevation: 5,
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: () => Navigator.pop(context),
-        child: const SizedBox(
+        child: Container(
           width: 48,
           height: 48,
-          child: Icon(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white,
+              width: 3,
+            ),
+          ),
+          child: const Icon(
             Icons.arrow_back_ios_new_rounded,
             color: Colors.white,
-            size: 23,
+            size: 22,
           ),
         ),
       ),
