@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:buba_projek/siswa/quis/quis.dart';
 
 import '../models/kelas_model.dart';
 import 'selectClass.dart';
+import 'quis/quisList.dart';
 
 class SelectContent extends StatelessWidget {
   const SelectContent({super.key});
@@ -10,7 +10,25 @@ class SelectContent extends StatelessWidget {
   Future<KelasModel?> _pilihKelas(BuildContext context) {
     return Navigator.push<KelasModel>(
       context,
-      MaterialPageRoute(builder: (context) => const SelectClass()),
+      MaterialPageRoute(
+        builder: (context) => const SelectClass(),
+      ),
+    );
+  }
+
+  Future<void> _bukaKuis(BuildContext context) async {
+    final kelas = await _pilihKelas(context);
+
+    if (!context.mounted || kelas == null) return;
+
+    _showInfoDialog(
+      context,
+      title: 'Kelas Berhasil Dipilih',
+      message:
+          'Kelas ${kelas.namaKelas} berhasil dipilih.\n\n'
+          'ID Kelas: ${kelas.id}\n\n'
+          'Halaman pemilihan kategori sedang dalam proses pengerjaan. '
+          'Setelah tersedia, kamu dapat melanjutkan ke daftar kuis.',
     );
   }
 
@@ -24,7 +42,6 @@ class SelectContent extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // 1. Gambar Background Sesuai Web (assets/images/backgroundSplash.png)
           Image.asset(
             'assets/images/backgroundSplash.png',
             width: double.infinity,
@@ -32,35 +49,28 @@ class SelectContent extends StatelessWidget {
             fit: BoxFit.cover,
             alignment: Alignment.center,
             errorBuilder: (context, error, stackTrace) {
-              return const ColoredBox(color: Color(0xFF5CB8E4));
+              return const ColoredBox(
+                color: Color(0xFF5CB8E4),
+              );
             },
           ),
-
-          // 2. Konten Utama
           SafeArea(
             child: Column(
               children: [
                 const SizedBox(height: 16),
-
-                // Top Bar: Tombol Kembali di kiri & Judul "PILIH KONTEN" di tengah
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      // Tombol Kembali (Lingkaran biru muda border putih)
                       Align(
                         alignment: Alignment.centerLeft,
                         child: _buildBackButton(context),
                       ),
-
-                      // Badge Header "PILIH KONTEN"
                       _buildHeaderTitle(),
                     ],
                   ),
                 ),
-
-                // Area 3 Menu Pilihan (MATERI, KUIS, RIWAYAT)
                 Expanded(
                   child: Center(
                     child: SingleChildScrollView(
@@ -73,7 +83,10 @@ class SelectContent extends StatelessWidget {
                           ? Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.center,
-                              children: _buildCards(context, isLandscape: true),
+                              children: _buildCards(
+                                context,
+                                isLandscape: true,
+                              ),
                             )
                           : Column(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -94,7 +107,6 @@ class SelectContent extends StatelessWidget {
     );
   }
 
-  // Widget Tombol Kembali
   Widget _buildBackButton(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
@@ -115,7 +127,7 @@ class SelectContent extends StatelessWidget {
           customBorder: const CircleBorder(),
           onTap: () => Navigator.of(context).pop(),
           child: const Padding(
-            padding: EdgeInsets.all(8.0),
+            padding: EdgeInsets.all(8),
             child: Icon(
               Icons.arrow_back_ios_new_rounded,
               color: Colors.white,
@@ -127,10 +139,12 @@ class SelectContent extends StatelessWidget {
     );
   }
 
-  // Widget Badge Header "PILIH KONTEN"
   Widget _buildHeaderTitle() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 10),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 36,
+        vertical: 10,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFF1E60BE),
         borderRadius: BorderRadius.circular(30),
@@ -149,21 +163,23 @@ class SelectContent extends StatelessWidget {
           color: Colors.white,
           fontSize: 20,
           fontWeight: FontWeight.w900,
-          letterSpacing: 2.0,
+          letterSpacing: 2,
         ),
       ),
     );
   }
 
-  // Daftar Kartu Menu
-  List<Widget> _buildCards(BuildContext context, {required bool isLandscape}) {
+  List<Widget> _buildCards(
+    BuildContext context, {
+    required bool isLandscape,
+  }) {
     final double cardWidth = isLandscape ? 200 : 260;
     final double cardHeight = isLandscape ? 220 : 160;
 
     return [
       _ContentMenuCard(
         title: 'MATERI',
-        color: const Color(0xFF71BF4F), // Hijau
+        color: const Color(0xFF71BF4F),
         assetImage: 'assets/images/ic_materi.png',
         fallbackIcon: Icons.menu_book_rounded,
         width: cardWidth,
@@ -179,8 +195,8 @@ class SelectContent extends StatelessWidget {
                     context,
                     title: 'Materi Pembelajaran',
                     message:
-                        'Kelas ${kelas.namaKelas} (ID: ${kelas.id}) dipilih, '
-                        'tetapi halaman Materi belum tersedia.',
+                        'Kelas ${kelas.namaKelas} (ID: ${kelas.id}) '
+                        'dipilih, tetapi halaman Materi belum tersedia.',
                   );
                 },
               ),
@@ -188,10 +204,15 @@ class SelectContent extends StatelessWidget {
           );
         },
       ),
-      SizedBox(width: isLandscape ? 24 : 0, height: isLandscape ? 0 : 20),
+
+      SizedBox(
+        width: isLandscape ? 24 : 0,
+        height: isLandscape ? 0 : 20,
+      ),
+
       _ContentMenuCard(
         title: 'KUIS',
-        color: const Color(0xFF3A84FA), // Biru
+        color: const Color(0xFF3A84FA),
         assetImage: 'assets/images/ic_kuis.png',
         fallbackIcon: Icons.edit_rounded,
         width: cardWidth,
@@ -203,14 +224,25 @@ class SelectContent extends StatelessWidget {
 
           await Navigator.push<void>(
             context,
-            MaterialPageRoute(builder: (context) => HalamanKuis(kelas: kelas)),
+            MaterialPageRoute(
+              builder: (context) => QuisListPage(
+                kelasId: kelas.id,
+                kategoriId: 0,
+                namaKelas: kelas.namaKelas,
+              ),
+            ),
           );
         },
       ),
-      SizedBox(width: isLandscape ? 24 : 0, height: isLandscape ? 0 : 20),
+
+      SizedBox(
+        width: isLandscape ? 24 : 0,
+        height: isLandscape ? 0 : 20,
+      ),
+
       _ContentMenuCard(
         title: 'RIWAYAT',
-        color: const Color(0xFFFAA63A), // Oranye
+        color: const Color(0xFFFAA63A),
         assetImage: 'assets/images/ic_riwayat.png',
         fallbackIcon: Icons.emoji_events_rounded,
         width: cardWidth,
@@ -235,10 +267,13 @@ class SelectContent extends StatelessWidget {
   }) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Color(0xFF1E60BE), width: 3),
+          side: const BorderSide(
+            color: Color(0xFF1E60BE),
+            width: 3,
+          ),
         ),
         title: Text(
           title,
@@ -262,9 +297,12 @@ class SelectContent extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 10,
+              ),
             ),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text(
               'OKE',
               style: TextStyle(fontWeight: FontWeight.bold),
@@ -276,7 +314,6 @@ class SelectContent extends StatelessWidget {
   }
 }
 
-// Komponen Kartu Menu Interaktif dengan Efek Animasi Bounce
 class _ContentMenuCard extends StatefulWidget {
   final String title;
   final Color color;
@@ -308,7 +345,7 @@ class _ContentMenuCardState extends State<_ContentMenuCard> {
   @override
   Widget build(BuildContext context) {
     return AnimatedScale(
-      scale: _isPressed ? 0.94 : 1.0,
+      scale: _isPressed ? 0.94 : 1,
       duration: const Duration(milliseconds: 120),
       curve: Curves.easeInOut,
       child: Container(
@@ -317,7 +354,10 @@ class _ContentMenuCardState extends State<_ContentMenuCard> {
         decoration: BoxDecoration(
           color: widget.color,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white, width: 4.5),
+          border: Border.all(
+            color: Colors.white,
+            width: 4.5,
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.25),
@@ -332,17 +372,30 @@ class _ContentMenuCardState extends State<_ContentMenuCard> {
             borderRadius: BorderRadius.circular(20),
             splashColor: Colors.white.withValues(alpha: 0.3),
             highlightColor: Colors.white.withValues(alpha: 0.1),
-            onTapDown: (_) => setState(() => _isPressed = true),
-            onTapUp: (_) => setState(() => _isPressed = false),
-            onTapCancel: () => setState(() => _isPressed = false),
+            onTapDown: (_) {
+              setState(() => _isPressed = true);
+            },
+            onTapUp: (_) {
+              setState(() => _isPressed = false);
+            },
+            onTapCancel: () {
+              setState(() => _isPressed = false);
+            },
             onTap: widget.onTap,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
               child: widget.isLandscape
                   ? Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Expanded(child: Center(child: _buildIcon())),
+                        Expanded(
+                          child: Center(
+                            child: _buildIcon(),
+                          ),
+                        ),
                         const SizedBox(height: 8),
                         Text(
                           widget.title,
@@ -394,7 +447,11 @@ class _ContentMenuCardState extends State<_ContentMenuCard> {
       height: size,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
-        return Icon(widget.fallbackIcon, size: size * 0.8, color: Colors.white);
+        return Icon(
+          widget.fallbackIcon,
+          size: size * 0.8,
+          color: Colors.white,
+        );
       },
     );
   }
