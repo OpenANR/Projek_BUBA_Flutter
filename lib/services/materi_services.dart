@@ -8,61 +8,108 @@ class MateriServices {
   // URL API Laravel
   static const String baseUrl = AuthServices.baseUrl;
 
-  // Mengambil semua data materi
+  Future<Map<String, String>> _headers() async {
+    final token = await AuthServices.getToken();
+
+    if (token == null || token.isEmpty) {
+      throw Exception(
+        'Token tidak ditemukan. Silakan login kembali.',
+      );
+    }
+
+    return {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+  }
+
+  // Mengambil seluruh materi berdasarkan kelas dan kategori
   Future<List<MateriModel>> getMateri({
-    int? kelasId,
-    int? kategoriId,
+    required int kelasId,
+    required int kategoriId,
   }) async {
     try {
-      // Parameter untuk filter kelas dan kategori
-      final queryParameters = <String, String>{};
-
-      if (kelasId != null) {
-        queryParameters['kelas_id'] = kelasId.toString();
-      }
-
-      if (kategoriId != null) {
-        queryParameters['kategori_id'] = kategoriId.toString();
-      }
-
-      final uri = Uri.parse('$baseUrl/materi').replace(
-        queryParameters:
-            queryParameters.isEmpty ? null : queryParameters,
+      final uri = Uri.parse('$baseUrl/siswa/materi').replace(
+        queryParameters: {
+          'kelas_id': kelasId.toString(),
+          'kategori_id': kategoriId.toString(),
+        },
       );
 
       final response = await http.get(
         uri,
-        headers: {
-          'Accept': 'application/json',
-        },
+        headers: await _headers(),
       );
 
       if (response.statusCode == 200) {
         final decodedData = jsonDecode(response.body);
 
-        // Menyesuaikan jika API menggunakan format pagination
-        // atau langsung mengembalikan array JSON
         final List<dynamic> data;
-
-        if (decodedData is List) {
-          data = decodedData;
-        } else if (decodedData is Map &&
-            decodedData['data'] is List) {
+        if (decodedData is Map && decodedData['data'] is List) {
           data = decodedData['data'];
+        } else if (decodedData is List) {
+          data = decodedData;
         } else {
           throw Exception('Format data materi tidak sesuai');
         }
 
         return data
-            .map((json) => MateriModel.fromJson(json))
+            .map((json) => MateriModel.fromJson(
+                  Map<String, dynamic>.from(json),
+                  baseUrl: baseUrl,
+                ))
             .toList();
       } else {
+        final decoded = jsonDecode(response.body);
+        final message = decoded is Map ? decoded['message'] : null;
         throw Exception(
-          'Gagal mengambil materi. Status: ${response.statusCode}',
+          message ?? 'Gagal mengambil materi. Status: ${response.statusCode}',
         );
       }
     } catch (e) {
-      throw Exception('Terjadi kesalahan: $e');
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
+  // Mengambil detail satu materi berdasarkan kode_materi
+  Future<MateriModel> getDetailMateri(String kodeMateri) async {
+    try {
+      final uri = Uri.parse('$baseUrl/siswa/materi/$kodeMateri');
+
+      final response = await http.get(
+        uri,
+        headers: await _headers(),
+      );
+
+      if (response.statusCode == 200) {
+        final decodedData = jsonDecode(response.body);
+
+        final dynamic data;
+        if (decodedData is Map && decodedData['data'] != null) {
+          data = decodedData['data'];
+        } else {
+          data = decodedData;
+        }
+
+        if (data is! Map) {
+          throw Exception('Format detail materi tidak sesuai');
+        }
+
+        return MateriModel.fromJson(
+          Map<String, dynamic>.from(data),
+          baseUrl: baseUrl,
+        );
+      } else {
+        final decoded = jsonDecode(response.body);
+        final message = decoded is Map ? decoded['message'] : null;
+        throw Exception(
+          message ??
+              'Gagal mengambil detail materi. Status: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
     }
   }
 }
