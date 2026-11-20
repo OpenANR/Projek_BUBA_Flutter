@@ -1,7 +1,7 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/materi_model.dart';
+import '../../services/audio_player/app_audio_player.dart';
 import '../../services/materi_services.dart';
 
 // Alias agar kompatibel jika ada pemanggilan MateriPage
@@ -31,7 +31,7 @@ class MateriDetailPage extends StatefulWidget {
 
 class _MateriDetailPageState extends State<MateriDetailPage> {
   final MateriServices _services = MateriServices();
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  final AppAudioPlayer _audioPlayer = AppAudioPlayer();
 
   late String _currentKodeMateri;
   late int _currentIndex;
@@ -121,7 +121,7 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
         setState(() => _isPlayingAudio = false);
       } else {
         await _audioPlayer.stop();
-        await _audioPlayer.play(UrlSource(audioUrl));
+        await _audioPlayer.play(audioUrl);
         if (!mounted) return;
         setState(() => _isPlayingAudio = true);
       }
@@ -294,7 +294,14 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
               ],
 
               // Gambar Materi jika tersedia
-              if (materi.gambarUrl != null &&
+              if (materi.gambarUrls.isNotEmpty) ...[
+                ...materi.gambarUrls.map(
+                  (url) => Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: _buildImageCard(url),
+                  ),
+                ),
+              ] else if (materi.gambarUrl != null &&
                   materi.gambarUrl!.isNotEmpty) ...[
                 _buildImageCard(materi.gambarUrl!),
                 const SizedBox(height: 16),
@@ -521,6 +528,7 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
         child: Image.network(
           imageUrl,
           fit: BoxFit.contain,
+          webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) return child;
             return Container(

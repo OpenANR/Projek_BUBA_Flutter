@@ -462,6 +462,7 @@ class _ListMateriPageState extends State<ListMateriPage> {
                     width: 70,
                     height: 70,
                     fit: BoxFit.cover,
+                    webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         width: 70,
