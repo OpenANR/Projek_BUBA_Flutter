@@ -1,7 +1,7 @@
-name: buba_projek
-description: "A new Flutter project."
+name: projek_buba
+description: "Belajar, Bermain dan Berkembang"
 publish_to: 'none'
-version: 0.1.0+1
+version: 1.0.0+1
 
 environment:
   sdk: ^3.13.1
@@ -10,6 +10,8 @@ dependencies:
   audioplayers: ^6.8.1
   flutter:
     sdk: flutter
+  flutter_app_name: ^0.1.1
+  flutter_launcher_icons: ^0.14.4
   http: ^1.6.0
   shared_preferences: ^2.5.6
 
@@ -17,9 +19,18 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  change_app_package_name: ^1.5.0
 
 flutter:
   uses-material-design: true
 
   assets:
     - assets/images/
+
+flutter_launcher_icons:
+ android: "launcher_icon"
+ ios: true
+ image_path: "assets/icons/appIcon.png"
+
+flutter_app_name:
+ name: "BUBA"

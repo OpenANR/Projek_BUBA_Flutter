@@ -27,7 +27,14 @@ class _QuisListPageState extends State<QuisListPage> {
 
   List<KuisModel> daftarKuis = [];
   bool loading = true;
+  bool kategoriTerkunci = false;
   String? error;
+
+  static const Color _blue = Color(0xFF2865CC);
+  static const Color _darkBlue = Color(0xFF2459A6);
+  static const Color _lightBlue = Color(0xFF5EBEF3);
+  static const Color _green = Color(0xFF71BF4F);
+  static const Color _orange = Color(0xFFFAA63A);
 
   @override
   void initState() {
@@ -35,7 +42,10 @@ class _QuisListPageState extends State<QuisListPage> {
     loadKuis();
   }
 
+  // MENGAMBIL DAFTAR KUIS DAN STATUS TERKUNCI
   Future<void> loadKuis() async {
+    if (!mounted) return;
+
     setState(() {
       loading = true;
       error = null;
@@ -51,6 +61,7 @@ class _QuisListPageState extends State<QuisListPage> {
 
       setState(() {
         daftarKuis = data;
+        kategoriTerkunci = _services.kategoriTerkunci;
         loading = false;
       });
     } catch (e) {
@@ -66,103 +77,338 @@ class _QuisListPageState extends State<QuisListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Colors.blue,
+        automaticallyImplyLeading: false,
+        leadingWidth: 64,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: _BackButton(
+            onPressed: () {
+              Navigator.maybePop(context);
+            },
+          ),
+        ),
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text(
-          'Daftar Kuis',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        centerTitle: true,
+        title: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 25,
+            vertical: 10,
+          ),
+          decoration: BoxDecoration(
+            color: _blue,
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(
+              color: Colors.white,
+              width: 3,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Text(
+            'DAFTAR KUIS',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 17,
+              letterSpacing: 1,
+              color: Colors.white,
+            ),
+          ),
         ),
       ),
-      body: RefreshIndicator(
-        onRefresh: loadKuis,
-        child: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: Colors.blue,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            'assets/images/backgroundSplash.png',
+            fit: BoxFit.cover,
+          ),
+          SafeArea(
+            child: RefreshIndicator(
+              color: _blue,
+              onRefresh: loadKuis,
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(20, 75, 20, 30),
                 children: [
-                  const Text(
-                    'Ayo Kerjakan Kuis!',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 21,
-                      fontWeight: FontWeight.bold,
+                  _buildWelcomeCard(),
+                  const SizedBox(height: 22),
+                  _buildInfoCard(),
+                  const SizedBox(height: 15),
+
+                  // PEMBERITAHUAN KATEGORI TERKUNCI
+                  if (!loading &&
+                      error == null &&
+                      kategoriTerkunci) ...[
+                    _buildLockedNotice(),
+                    const SizedBox(height: 15),
+                  ],
+
+                  if (loading)
+                    _buildLoading()
+                  else if (error != null)
+                    _buildError()
+                  else if (daftarKuis.isEmpty)
+                    _buildEmpty()
+                  else
+                    ...List.generate(
+                      daftarKuis.length,
+                      (index) => _buildCard(
+                        daftarKuis[index],
+                        index,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${widget.namaKelas} • ${widget.namaKategori}',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Uji pengetahuanmu dan kumpulkan bintang!',
-                    style: TextStyle(color: Colors.white),
-                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 22),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Kuis Tersedia',
-                  style: TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  '${daftarKuis.length} Soal',
-                  style: const TextStyle(color: Colors.grey),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-
-            if (loading)
-              const Padding(
-                padding: EdgeInsets.all(40),
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (error != null)
-              _buildError()
-            else if (daftarKuis.isEmpty)
-              _buildEmpty()
-            else
-              ...daftarKuis.map((kuis) => _buildCard(kuis)),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildCard(KuisModel kuis) {
+  // KARTU SAMBUTAN
+  Widget _buildWelcomeCard() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: _blue,
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(
+          color: Colors.white,
+          width: 4,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Ayo Kerjakan Kuis!',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '${widget.namaKelas} • ${widget.namaKategori}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Uji pengetahuanmu dan kumpulkan bintang!',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            width: 75,
+            height: 75,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white,
+                width: 2,
+              ),
+            ),
+            child: const Center(
+              child: Text(
+                '📝',
+                style: TextStyle(fontSize: 42),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // KARTU INFORMASI JUMLAH KUIS
+  Widget _buildInfoCard() {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 17,
+        vertical: 15,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: _blue,
+          width: 2.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 45,
+            height: 45,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE5F3FF),
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: const Icon(
+              Icons.menu_book_rounded,
+              color: _blue,
+              size: 27,
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Text(
+              'Kuis Tersedia',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+                color: _darkBlue,
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 13,
+              vertical: 8,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE7F7DF),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Text(
+              '${daftarKuis.length} Soal',
+              style: const TextStyle(
+                color: Color(0xFF4D9633),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // PEMBERITAHUAN KATEGORI TERKUNCI
+  Widget _buildLockedNotice() {
+    return Container(
+      padding: const EdgeInsets.all(17),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF3E0),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: _orange,
+          width: 2.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.lock_rounded,
+            color: Color(0xFFE58A16),
+            size: 32,
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Kategori Kuis Terkunci!',
+                  style: TextStyle(
+                    color: Color(0xFFB86A0A),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  'Kamu sudah berhasil menyelesaikan kategori ini '
+                  'dengan minimal 3 bintang. Kuis tidak dapat '
+                  'dikerjakan kembali.',
+                  style: TextStyle(
+                    color: Color(0xFF795522),
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // KARTU SETIAP KUIS
+  Widget _buildCard(KuisModel kuis, int index) {
+    final colors = [
+      _blue,
+      _green,
+      _orange,
+      const Color(0xFFAB70D6),
+    ];
+
+    final cardColor = colors[index % colors.length];
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 17),
       padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        borderRadius: BorderRadius.circular(23),
+        border: Border.all(
+          color: cardColor,
+          width: 2.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: 0.13),
             blurRadius: 8,
-            offset: const Offset(0, 3),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -170,80 +416,132 @@ class _QuisListPageState extends State<QuisListPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 11,
-                  vertical: 6,
+                  horizontal: 13,
+                  vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF3E8FF),
-                  borderRadius: BorderRadius.circular(8),
+                  color: cardColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   kuis.kodeKuis,
-                  style: const TextStyle(
-                    color: Colors.deepPurple,
+                  style: TextStyle(
+                    color: cardColor,
                     fontWeight: FontWeight.bold,
-                    fontSize: 12,
+                    fontSize: 13,
                   ),
                 ),
               ),
-              const Icon(
-                Icons.quiz_outlined,
-                color: Colors.blue,
+              const Spacer(),
+              Container(
+                width: 43,
+                height: 43,
+                decoration: BoxDecoration(
+                  color: cardColor.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  kategoriTerkunci
+                      ? Icons.lock_rounded
+                      : Icons.quiz_rounded,
+                  color: cardColor,
+                  size: 26,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 16),
           Text(
             kuis.pertanyaan,
-            maxLines: 2,
+            maxLines: 3,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
+              color: Color(0xFF263238),
+              height: 1.4,
             ),
           ),
           const SizedBox(height: 15),
-          const Divider(),
-          const SizedBox(height: 5),
+          const Divider(
+            color: Color(0xFFEEEEEE),
+            thickness: 1,
+          ),
+          const SizedBox(height: 8),
           const Row(
             children: [
-              Icon(Icons.menu_book, size: 18, color: Colors.grey),
+              Icon(
+                Icons.menu_book_rounded,
+                size: 18,
+                color: Colors.grey,
+              ),
               SizedBox(width: 7),
               Text(
                 'Pertanyaan kuis',
-                style: TextStyle(color: Colors.grey),
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 17),
+
+          // TOMBOL MULAI KUIS
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => QuisPage(
-                      kelasId: widget.kelasId,
-                      kategoriId: widget.kategoriId,
-                      namaKategori: widget.namaKategori,
-                      daftarKuis: daftarKuis,
-                    ),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.play_arrow),
-              label: const Text('Mulai Kuis'),
+              onPressed: kategoriTerkunci
+                  ? null
+                  : () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => QuisPage(
+                            quisId: kuis.id,
+                            kelasId: widget.kelasId,
+                            kategoriId: widget.kategoriId,
+                            namaKategori: widget.namaKategori,
+                            daftarKuis: daftarKuis,
+                            namaKelas: widget.namaKelas,
+                          ),
+                        ),
+                      );
+                    },
+              icon: Icon(
+                kategoriTerkunci
+                    ? Icons.lock_rounded
+                    : Icons.play_arrow_rounded,
+                size: 25,
+              ),
+              label: Text(
+                kategoriTerkunci
+                    ? 'Kuis Terkunci'
+                    : 'Mulai Kuis',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
+                backgroundColor: cardColor,
+                disabledBackgroundColor: Colors.grey.shade400,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                disabledForegroundColor: Colors.white,
+                elevation: kategoriTerkunci ? 0 : 3,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 14,
+                ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(16),
+                  side: const BorderSide(
+                    color: Colors.white,
+                    width: 2,
+                  ),
                 ),
               ),
             ),
@@ -253,34 +551,157 @@ class _QuisListPageState extends State<QuisListPage> {
     );
   }
 
-  Widget _buildEmpty() {
+  // LOADING
+  Widget _buildLoading() {
     return const Padding(
-      padding: EdgeInsets.all(35),
-      child: Column(
+      padding: EdgeInsets.all(45),
+      child: Center(
+        child: Column(
+          children: [
+            CircularProgressIndicator(
+              color: _blue,
+            ),
+            SizedBox(height: 15),
+            Text(
+              'Sedang memuat kuis...',
+              style: TextStyle(
+                color: _darkBlue,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // JIKA KUIS KOSONG
+  Widget _buildEmpty() {
+    return Container(
+      padding: const EdgeInsets.all(30),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(23),
+        border: Border.all(
+          color: _lightBlue,
+          width: 2,
+        ),
+      ),
+      child: const Column(
         children: [
-          Icon(Icons.quiz_outlined, size: 60, color: Colors.grey),
+          Text(
+            '📚',
+            style: TextStyle(fontSize: 55),
+          ),
           SizedBox(height: 12),
           Text(
-            'Belum ada kuis tersedia',
-            style: TextStyle(color: Colors.grey),
+            'Belum Ada Kuis',
+            style: TextStyle(
+              color: _darkBlue,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 7),
+          Text(
+            'Kuis untuk kategori ini belum tersedia. '
+            'Yuk, cek lagi nanti!',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.grey,
+              height: 1.4,
+            ),
           ),
         ],
       ),
     );
   }
 
+  // JIKA TERJADI ERROR
   Widget _buildError() {
-    return Column(
-      children: [
-        const Icon(Icons.error_outline, size: 50, color: Colors.red),
-        const SizedBox(height: 10),
-        Text(error!, textAlign: TextAlign.center),
-        const SizedBox(height: 12),
-        ElevatedButton(
-          onPressed: loadKuis,
-          child: const Text('Coba Lagi'),
+    return Container(
+      padding: const EdgeInsets.all(23),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: Colors.redAccent,
+          width: 2,
         ),
-      ],
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.error_outline_rounded,
+            size: 50,
+            color: Colors.redAccent,
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Gagal Memuat Kuis',
+            style: TextStyle(
+              color: Colors.redAccent,
+              fontWeight: FontWeight.bold,
+              fontSize: 17,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            error!,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.grey,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 17),
+          ElevatedButton.icon(
+            onPressed: loadKuis,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Coba Lagi'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _blue,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 22,
+                vertical: 12,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// TOMBOL KEMBALI SEPERTI TAMPILAN WEB
+class _BackButton extends StatelessWidget {
+  const _BackButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFF5EBEF3),
+      shape: const CircleBorder(
+        side: BorderSide(color: Colors.white, width: 3),
+      ),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onPressed,
+        child: const Padding(
+          padding: EdgeInsets.all(9),
+          child: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.white,
+            size: 20,
+          ),
+        ),
+      ),
     );
   }
 }

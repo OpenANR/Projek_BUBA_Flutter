@@ -1,4 +1,4 @@
-package com.example.buba_projek
+package com.najatif.buba
 
 import io.flutter.embedding.android.FlutterActivity
 

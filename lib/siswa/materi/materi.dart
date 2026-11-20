@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:audioplayers/audioplayers.dart';
 
-import '../../models/kelas_model.dart';
-import '../../models/materi_model.dart';
-import '../../services/auth_services.dart';
-import '../../services/materi_services.dart';
+// Fungsi utama untuk menjalankan aplikasi Flutter
+void main() {
+  runApp(const BubaApp());
+}
 
-class HalamanMateri extends StatefulWidget {
-  final KelasModel? kelas;
-
-  const HalamanMateri({
-    super.key,
-    this.kelas,
-  });
+// Widget utama aplikasi BUBA
+class BubaApp extends StatelessWidget {
+  const BubaApp({super.key});
 
   @override
   State<HalamanMateri> createState() => _HalamanMateriState();
@@ -56,133 +51,78 @@ class _HalamanMateriState extends State<HalamanMateri> {
   }
 
   @override
-  void dispose() {
-    audioPlayer.dispose();
-    super.dispose();
-  }
+  State<MateriPage> createState() => _MateriPageState();
+}
 
-  // ============================================================
-  // AMBIL KELAS
-  // ============================================================
+class _MateriPageState extends State<MateriPage> {
+  // Controller untuk mengambil teks dari kolom judul materi
+  final TextEditingController judulController =
+      TextEditingController();
 
-  Future<void> ambilKelas() async {
-    setState(() {
-      loading = true;
-      errorMessage = '';
-    });
+  // Controller untuk mengambil teks dari kolom isi materi
+  final TextEditingController isiController =
+      TextEditingController();
 
-    try {
-      final hasil = await materiServices.getKelas();
+  // Menyimpan pilihan kategori dan kelas yang dipilih pengguna
+  // Nilai null berarti belum ada pilihan.
+  String? kategoriTerpilih;
+  String? kelasTerpilih;
 
-      if (!mounted) return;
+  // Daftar pilihan kategori untuk dropdown
+  // Data ini masih berupa contoh, belum dari database Laravel.
+  final List<String> kategoriList = [
+    'Huruf & Angka',
+    'Warna & Bentuk',
+    'Hewan & Tumbuhan',
+    'Anggota Tubuh',
+  ];
 
-      setState(() {
-        daftarKelas = hasil;
-        loading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
+  // Daftar pilihan kelas untuk dropdown
+  final List<String> kelasList = [
+    'Kelas A',
+    'Kelas B',
+  ];
 
-      setState(() {
-        loading = false;
-        errorMessage = e.toString();
-      });
-    }
-  }
+  // Menyimpan materi sementara selama aplikasi berjalan.
+  // Data akan hilang jika aplikasi dimulai ulang.
+  final List<Map<String, String>> daftarMateri = [];
 
-  // ============================================================
-  // AMBIL KATEGORI
-  // ============================================================
+  // Fungsi untuk memeriksa dan menyimpan materi
+  void simpanMateri() {
+    // Memastikan semua kolom telah diisi
+    if (judulController.text.trim().isEmpty ||
+        isiController.text.trim().isEmpty ||
+        kategoriTerpilih == null ||
+        kelasTerpilih == null) {
 
-  Future<void> ambilKategori() async {
-    if (kelasDipilih == null) return;
-
-    setState(() {
-      loading = true;
-      errorMessage = '';
-      kategoriDipilih = null;
-      daftarMateri = [];
-      materiAktif = null;
-    });
-
-    try {
-      final hasil = await materiServices.getKategori(
-        kelasDipilih!.namaKelas,
+      // Menampilkan pesan jika masih ada kolom kosong
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Semua kolom harus diisi!'),
+        ),
       );
 
-      if (!mounted) return;
-
-      setState(() {
-        daftarKategori = hasil;
-        loading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        loading = false;
-        errorMessage = e.toString();
-      });
-    }
-  }
-
-  // ============================================================
-  // AMBIL DAFTAR MATERI
-  // ============================================================
-
-  Future<void> ambilDaftarMateri() async {
-    if (kelasDipilih == null ||
-        kategoriDipilih == null) {
+      // Menghentikan proses penyimpanan
       return;
     }
 
     setState(() {
-      loading = true;
-      errorMessage = '';
-      daftarMateri = [];
-      materiAktif = null;
+      daftarMateri.add({
+        'judul': judulController.text.trim(),
+        'isi': isiController.text.trim(),
+        'kategori': kategoriTerpilih!,
+        'kelas': kelasTerpilih!,
+      });
     });
 
-    try {
-      final int idKelas = kelasDipilih!.id;
+    // Mengosongkan kolom judul dan isi setelah disimpan
+    judulController.clear();
+    isiController.clear();
 
-      final int idKategori = int.parse(
-        kategoriDipilih['id'].toString(),
-      );
-
-      final hasil = await materiServices.getMateri(
-        kelasId: idKelas,
-        kategoriId: idKategori,
-      );
-
-      if (!mounted) return;
-
-      setState(() {
-        daftarMateri = hasil;
-        loading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        loading = false;
-        errorMessage = e.toString();
-      });
-    }
-  }
-
-  // ============================================================
-  // DETAIL MATERI
-  // ============================================================
-
-  Future<void> ambilDetailMateri(int index) async {
-    if (index < 0 || index >= daftarMateri.length) {
-      return;
-    }
-
+    // Mengembalikan dropdown ke kondisi belum dipilih
     setState(() {
-      loading = true;
-      errorMessage = '';
+      kategoriTerpilih = null;
+      kelasTerpilih = null;
     });
 
     try {
@@ -474,209 +414,88 @@ class _HalamanMateriState extends State<HalamanMateri> {
 
           const SizedBox(height: 8),
 
-          const Text(
-            'Pilih kelas untuk melihat materi pembelajaran.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 15,
-            ),
-          ),
+                      // Dropdown untuk memilih kategori materi
+                      DropdownButtonFormField<String>(
+                        value: kategoriTerpilih,
+                        isExpanded: true,
 
-          const SizedBox(height: 30),
-
-          ...daftarKelas.asMap().entries.map(
-            (entry) {
-              final index = entry.key;
-              final kelas = entry.value;
-
-              final warna = [
-                const Color(0xFF71BF4F),
-                const Color(0xFFFAA63A),
-                const Color(0xFFD8759C),
-                const Color(0xFF5EBEF3),
-                const Color(0xFF9C65CD),
-              ][index % 5];
-
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    kelasDipilih = kelas;
-                  });
-
-                  ambilKategori();
-                },
-                child: Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.only(
-                    bottom: 15,
-                  ),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: warna,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color:
-                            Colors.black.withOpacity(0.15),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 55,
-                        height: 55,
-                        decoration: BoxDecoration(
-                          color:
-                              Colors.white.withOpacity(0.25),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.school,
-                          color: Colors.white,
-                          size: 30,
-                        ),
-                      ),
-
-                      const SizedBox(width: 15),
-
-                      Expanded(
-                        child: Text(
-                          kelas.namaKelas,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                        // Tampilan kotak dropdown
+                        decoration: InputDecoration(
+                          hintText: 'Pilih kategori materi',
+                          prefixIcon:
+                              const Icon(Icons.category_outlined),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
+
+                        // Mengubah setiap kategori menjadi pilihan dropdown
+                        items: kategoriList.map((kategori) {
+                          return DropdownMenuItem<String>(
+                            value: kategori,
+                            child: Text(kategori),
+                          );
+                        }).toList(),
+
+                        // Menyimpan kategori ketika pengguna memilihnya
+                        onChanged: (value) {
+                          setState(() {
+                            kategoriTerpilih = value;
+                          });
+                        },
                       ),
 
-                      const Icon(
-                        Icons.arrow_forward_ios,
-                        color: Colors.white,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
+                      const SizedBox(height: 18),
 
-  // ============================================================
-  // PILIH KATEGORI
-  // ============================================================
+                      // Label dropdown kelas
+                      const Text('Kelas'),
+                      const SizedBox(height: 8),
 
-  Widget halamanPilihKategori() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          const SizedBox(height: 10),
+                      // Dropdown untuk memilih kelas
+                      DropdownButtonFormField<String>(
+                        value: kelasTerpilih,
+                        isExpanded: true,
 
-          const Text(
-            '📖 PILIH KATEGORI!',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 27,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            'Kelas ${kelasDipilih!.namaKelas}',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-
-          const SizedBox(height: 30),
-
-          ...daftarKategori.asMap().entries.map(
-            (entry) {
-              final index = entry.key;
-              final kategori = entry.value;
-
-              final warna = [
-                const Color(0xFF71BF4F),
-                const Color(0xFFFAA63A),
-                const Color(0xFFD8759C),
-                const Color(0xFF5EBEF3),
-                const Color(0xFF9C65CD),
-                const Color(0xFFFFD629),
-                const Color(0xFF3CBDB1),
-                const Color(0xFFF36B6B),
-              ][index % 8];
-
-              final namaKategori =
-                  kategori['nama_kategori'] ??
-                  kategori['nama'] ??
-                  'Kategori';
-
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    kategoriDipilih = kategori;
-                  });
-
-                  ambilDaftarMateri();
-                },
-                child: Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.only(
-                    bottom: 15,
-                  ),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: warna,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color:
-                            Colors.black.withOpacity(0.15),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 55,
-                        height: 55,
-                        decoration: BoxDecoration(
-                          color:
-                              Colors.white.withOpacity(0.25),
-                          shape: BoxShape.circle,
+                        decoration: InputDecoration(
+                          hintText: 'Pilih kelas',
+                          prefixIcon:
+                              const Icon(Icons.school_outlined),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
-                        child: const Icon(
-                          Icons.menu_book,
-                          color: Colors.white,
-                          size: 30,
-                        ),
+
+                        // Menampilkan daftar kelas sebagai pilihan
+                        items: kelasList.map((kelas) {
+                          return DropdownMenuItem<String>(
+                            value: kelas,
+                            child: Text(kelas),
+                          );
+                        }).toList(),
+
+                        // Menyimpan kelas yang dipilih
+                        onChanged: (value) {
+                          setState(() {
+                            kelasTerpilih = value;
+                          });
+                        },
                       ),
 
-                      const SizedBox(width: 15),
+                      const SizedBox(height: 18),
 
-                      Expanded(
-                        child: Text(
-                          namaKategori.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 19,
-                            fontWeight: FontWeight.bold,
+                      // Label kolom judul materi
+                      const Text('Judul Materi'),
+                      const SizedBox(height: 8),
+
+                      // Kolom untuk memasukkan judul materi
+                      TextField(
+                        controller: judulController,
+                        decoration: InputDecoration(
+                          hintText: 'Contoh: Mengenal Huruf A',
+                          prefixIcon:
+                              const Icon(Icons.menu_book_outlined),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                       ),

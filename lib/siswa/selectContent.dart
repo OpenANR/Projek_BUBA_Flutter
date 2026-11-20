@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../models/kelas_model.dart';
 import 'selectClass.dart';
+import 'selectCategory.dart';
 import 'quis/quisList.dart';
+import 'riwayat_kuis.dart';
 
 class SelectContent extends StatelessWidget {
   const SelectContent({super.key});
@@ -13,22 +15,6 @@ class SelectContent extends StatelessWidget {
       MaterialPageRoute(
         builder: (context) => const SelectClass(),
       ),
-    );
-  }
-
-  Future<void> _bukaKuis(BuildContext context) async {
-    final kelas = await _pilihKelas(context);
-
-    if (!context.mounted || kelas == null) return;
-
-    _showInfoDialog(
-      context,
-      title: 'Kelas Berhasil Dipilih',
-      message:
-          'Kelas ${kelas.namaKelas} berhasil dipilih.\n\n'
-          'ID Kelas: ${kelas.id}\n\n'
-          'Halaman pemilihan kategori sedang dalam proses pengerjaan. '
-          'Setelah tersedia, kamu dapat melanjutkan ke daftar kuis.',
     );
   }
 
@@ -191,12 +177,12 @@ class SelectContent extends StatelessWidget {
             MaterialPageRoute(
               builder: (context) => SelectClass(
                 onClassSelected: (kelas) {
-                  _showInfoDialog(
-                    context,
-                    title: 'Materi Pembelajaran',
-                    message:
-                        'Kelas ${kelas.namaKelas} (ID: ${kelas.id}) '
-                        'dipilih, tetapi halaman Materi belum tersedia.',
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => SelectCategoryPage(
+                        className: kelas.namaKelas,
+                      ),
+                    ),
                   );
                 },
               ),
@@ -225,10 +211,20 @@ class SelectContent extends StatelessWidget {
           await Navigator.push<void>(
             context,
             MaterialPageRoute(
-              builder: (context) => QuisListPage(
-                kelasId: kelas.id,
-                kategoriId: 0,
-                namaKelas: kelas.namaKelas,
+              builder: (context) => SelectCategoryPage(
+                className: kelas.namaKelas,
+                onCategorySelected: (kategori) {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => QuisListPage(
+                        kelasId: kelas.id,
+                        kategoriId: kategori.id,
+                        namaKelas: kelas.namaKelas,
+                        namaKategori: kategori.namaKategori,
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           );
@@ -249,11 +245,11 @@ class SelectContent extends StatelessWidget {
         height: cardHeight,
         isLandscape: isLandscape,
         onTap: () {
-          _showInfoDialog(
+          Navigator.push(
             context,
-            title: 'Riwayat Kuis',
-            message:
-                'Kamu bisa melihat skor dan hasil kuis sebelumnya di sini!',
+            MaterialPageRoute(
+              builder: (_) => const RiwayatKuisPage(),
+            ),
           );
         },
       ),

@@ -7,12 +7,15 @@ import 'auth_services.dart';
 
 class KuisServices {
   static const String baseUrl = AuthServices.baseUrl;
+  bool kategoriTerkunci = false;
 
   Future<Map<String, String>> _headers() async {
     final token = await AuthServices.getToken();
 
     if (token == null || token.isEmpty) {
-      throw Exception('Token tidak ditemukan. Silakan login kembali.');
+      throw Exception(
+        'Token tidak ditemukan. Silakan login kembali.',
+      );
     }
 
     return {
@@ -22,7 +25,24 @@ class KuisServices {
     };
   }
 
-  // Mengambil daftar soal berdasarkan kelas dan kategori
+  // Mengubah response Laravel menjadi Map.
+  Map<String, dynamic> _decodeResponse(http.Response response) {
+    try {
+      final decoded = jsonDecode(response.body);
+
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+
+      throw Exception('Format respons server tidak valid.');
+    } on FormatException {
+      throw Exception(
+        'Respons server tidak valid (HTTP ${response.statusCode}).',
+      );
+    }
+  }
+
+  // Mengambil seluruh soal berdasarkan kelas dan kategori.
   Future<List<KuisModel>> getKuis({
     required int kelasId,
     required int kategoriId,
@@ -39,21 +59,29 @@ class KuisServices {
       headers: await _headers(),
     );
 
-    final data = jsonDecode(response.body);
+    final data = _decodeResponse(response);
+
+    kategoriTerkunci = data['terkunci'] == true;
 
     if (response.statusCode == 200 && data['success'] == true) {
-      final List daftarSoal = data['data'];
+      final List daftarSoal = data['data'] ?? [];
 
-      return daftarSoal
-          .map((item) => KuisModel.fromMap(item))
-          .toList();
+      return daftarSoal.map((item) {
+        return KuisModel.fromMap(
+          Map<String, dynamic>.from(item),
+          baseUrl: baseUrl,
+        );
+      }).toList();
     }
 
-    throw Exception(data['message'] ?? 'Gagal mengambil daftar kuis.');
+    throw Exception(
+      data['message'] ?? 'Gagal mengambil daftar kuis.',
+    );
   }
 
-  // Mengirim jawaban siswa ke Laravel
+  // Mengirim jawaban siswa ke Laravel.
   Future<Map<String, dynamic>> submitKuis({
+    required int quisId,
     required int kelasId,
     required int kategoriId,
     required Map<int, String> jawaban,
@@ -61,6 +89,7 @@ class KuisServices {
     final uri = Uri.parse('$baseUrl/siswa/kuis/submit');
 
     final body = {
+      'quis_id': quisId,
       'kelas_id': kelasId,
       'kategori_id': kategoriId,
       'jawaban': jawaban.map(
@@ -74,16 +103,27 @@ class KuisServices {
       body: jsonEncode(body),
     );
 
-    final data = jsonDecode(response.body);
+    final data = _decodeResponse(response);
 
     if (response.statusCode == 200 && data['success'] == true) {
-      return Map<String, dynamic>.from(data['hasil']);
+      // Mendukung response Laravel berbentuk:
+      // { "success": true, "hasil": {...} }
+      // maupun response dengan nilai langsung di bagian utama.
+      final hasil = data['hasil'];
+
+      if (hasil is Map) {
+        return Map<String, dynamic>.from(hasil);
+      }
+
+      return data;
     }
 
-    throw Exception(data['message'] ?? 'Gagal mengirim jawaban kuis.');
+    throw Exception(
+      data['message'] ?? 'Gagal mengirim jawaban kuis.',
+    );
   }
 
-  // Mengambil riwayat hasil kuis
+  // Mengambil riwayat hasil kuis.
   Future<List<Map<String, dynamic>>> getRiwayatKuis() async {
     final uri = Uri.parse('$baseUrl/siswa/hasil-kuis');
 
@@ -92,16 +132,18 @@ class KuisServices {
       headers: await _headers(),
     );
 
-    final data = jsonDecode(response.body);
+    final data = _decodeResponse(response);
 
     if (response.statusCode == 200 && data['success'] == true) {
-      final List daftarHasil = data['data'];
+      final List daftarHasil = data['data'] ?? [];
 
       return daftarHasil
           .map((item) => Map<String, dynamic>.from(item))
           .toList();
     }
 
-    throw Exception(data['message'] ?? 'Gagal mengambil riwayat kuis.');
+    throw Exception(
+      data['message'] ?? 'Gagal mengambil riwayat kuis.',
+    );
   }
 }
