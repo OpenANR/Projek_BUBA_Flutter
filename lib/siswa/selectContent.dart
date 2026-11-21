@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/kelas_model.dart';
 import 'selectClass.dart';
 import 'selectCategory.dart';
+import 'materi/list_materi.dart';
 import 'quis/quisList.dart';
 import 'riwayat_kuis.dart';
 
@@ -171,16 +172,23 @@ class SelectContent extends StatelessWidget {
         width: cardWidth,
         height: cardHeight,
         isLandscape: isLandscape,
-        onTap: () {
-          Navigator.push<void>(
+        onTap: () async {
+          final kelas = await _pilihKelas(context);
+          if (!context.mounted || kelas == null) return;
+
+          await Navigator.push<void>(
             context,
             MaterialPageRoute(
-              builder: (context) => SelectClass(
-                onClassSelected: (kelas) {
+              builder: (context) => SelectCategoryPage(
+                className: kelas.namaKelas,
+                onCategorySelected: (kategori) {
                   Navigator.of(context).push(
                     MaterialPageRoute<void>(
-                      builder: (_) => SelectCategoryPage(
-                        className: kelas.namaKelas,
+                      builder: (_) => ListMateriPage(
+                        kelasId: kelas.id,
+                        kategoriId: kategori.id,
+                        namaKelas: kelas.namaKelas,
+                        namaKategori: kategori.namaKategori,
                       ),
                     ),
                   );
