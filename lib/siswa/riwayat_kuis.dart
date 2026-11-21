@@ -44,14 +44,16 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
         isLoading = false;
       });
     } catch (e) {
-      if (!mounted) return;
+    if (!mounted) return;
 
-      setState(() {
-        pesanError = e.toString();
-        isLoading = false;
-      });
-    }
+    setState(() {
+      pesanError =
+          'Riwayat reward belum tersedia. '
+          'Silakan hubungkan perangkat ke internet terlebih dahulu.';
+      isLoading = false;
+    });
   }
+}
 
   // MENGAMBIL DATA RELASI DARI API
   Map<String, dynamic> ambilMap(

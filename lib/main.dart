@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:projek_buba/pages/checkSession.dart';
 
-import 'auth/auth_page.dart';
-
 void main() {
   runApp(const BubaApp());
 }
