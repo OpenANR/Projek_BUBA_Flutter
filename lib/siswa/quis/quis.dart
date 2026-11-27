@@ -627,6 +627,7 @@ class _QuisPageState extends State<QuisPage> {
                     color: const Color(0xFFF5F8FC),
                     child: Image.network(
                       url,
+                      key: ValueKey('${soal.id}-$url'),
                       width: double.infinity,
                       fit: BoxFit.contain,
                       webHtmlElementStrategy:

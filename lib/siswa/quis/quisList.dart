@@ -42,7 +42,6 @@ class _QuisListPageState extends State<QuisListPage> {
     loadKuis();
   }
 
-  // MENGAMBIL DAFTAR KUIS DAN STATUS TERKUNCI
   Future<void> loadKuis() async {
     if (!mounted) return;
 
@@ -74,101 +73,163 @@ class _QuisListPageState extends State<QuisListPage> {
     }
   }
 
+  // HEADER MENGIKUTI HALAMAN PILIH KATEGORI
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: _BackButton(
+              onPressed: () => Navigator.maybePop(context),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 56),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 10,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E60BE),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: Colors.white,
+                  width: 3.5,
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x33000000),
+                    blurRadius: 8,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'DAFTAR KUIS',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 2,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final horizontalPadding = screenWidth >= 700 ? 28.0 : 16.0;
+
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        leadingWidth: 64,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 8),
-          child: _BackButton(
-            onPressed: () {
-              Navigator.maybePop(context);
-            },
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        title: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 25,
-            vertical: 10,
-          ),
-          decoration: BoxDecoration(
-            color: _blue,
-            borderRadius: BorderRadius.circular(30),
-            border: Border.all(
-              color: Colors.white,
-              width: 3,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.12),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: const Text(
-            'DAFTAR KUIS',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 17,
-              letterSpacing: 1,
-              color: Colors.white,
-            ),
-          ),
-        ),
-      ),
+      backgroundColor: const Color(0xFFFFF8EE),
       body: Stack(
         fit: StackFit.expand,
         children: [
           Image.asset(
             'assets/images/backgroundSplash.png',
+            width: double.infinity,
+            height: double.infinity,
             fit: BoxFit.cover,
+            alignment: Alignment.center,
+            errorBuilder: (context, error, stackTrace) {
+              return const ColoredBox(
+                color: Color(0xFF5CB8E4),
+              );
+            },
           ),
           SafeArea(
-            child: RefreshIndicator(
-              color: _blue,
-              onRefresh: loadKuis,
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(20, 75, 20, 30),
-                children: [
-                  _buildWelcomeCard(),
-                  const SizedBox(height: 22),
-                  _buildInfoCard(),
-                  const SizedBox(height: 15),
-
-                  // PEMBERITAHUAN KATEGORI TERKUNCI
-                  if (!loading &&
-                      error == null &&
-                      kategoriTerkunci) ...[
-                    _buildLockedNotice(),
-                    const SizedBox(height: 15),
-                  ],
-
-                  if (loading)
-                    _buildLoading()
-                  else if (error != null)
-                    _buildError()
-                  else if (daftarKuis.isEmpty)
-                    _buildEmpty()
-                  else
-                    ...List.generate(
-                      daftarKuis.length,
-                      (index) => _buildCard(
-                        daftarKuis[index],
-                        index,
+            child: Column(
+              children: [
+                const SizedBox(height: 16),
+                _buildHeader(),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: RefreshIndicator(
+                    color: _blue,
+                    onRefresh: loadKuis,
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: EdgeInsets.fromLTRB(
+                        horizontalPadding,
+                        12,
+                        horizontalPadding,
+                        30,
                       ),
+                      children: [
+                        Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth: 900,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _buildWelcomeCard(),
+                                const SizedBox(height: 22),
+                                _buildInfoCard(),
+                                const SizedBox(height: 15),
+
+                                if (!loading &&
+                                    error == null &&
+                                    kategoriTerkunci) ...[
+                                  _buildLockedNotice(),
+                                  const SizedBox(height: 15),
+                                ],
+
+                                if (loading)
+                                  _buildLoading()
+                                else if (error != null)
+                                  _buildError()
+                                else if (daftarKuis.isEmpty)
+                                  _buildEmpty()
+                                else
+                                  ...List.generate(
+                                    daftarKuis.length,
+                                    (index) => _buildCard(
+                                      daftarKuis[index],
+                                      index,
+                                    ),
+                                  ),
+
+                                const SizedBox(height: 10),
+                                const Center(
+                                  child: Text(
+                                    'BUBA • Belajar sambil bermain 🌈',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w900,
+                                      shadows: [
+                                        Shadow(
+                                          color: Colors.black54,
+                                          blurRadius: 4,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                ],
-              ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -178,79 +239,85 @@ class _QuisListPageState extends State<QuisListPage> {
 
   // KARTU SAMBUTAN
   Widget _buildWelcomeCard() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: _blue,
-        borderRadius: BorderRadius.circular(25),
-        border: Border.all(
-          color: Colors.white,
-          width: 4,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Ayo Kerjakan Kuis!',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '${widget.namaKelas} • ${widget.namaKategori}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Uji pengetahuanmu dan kumpulkan bintang!',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    height: 1.4,
-                  ),
-                ),
-              ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 380;
+
+        return Container(
+          padding: EdgeInsets.all(compact ? 15 : 20),
+          decoration: BoxDecoration(
+            color: _blue,
+            borderRadius: BorderRadius.circular(25),
+            border: Border.all(
+              color: Colors.white,
+              width: 4,
             ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            width: 75,
-            height: 75,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white,
-                width: 2,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
               ),
-            ),
-            child: const Center(
-              child: Text(
-                '📝',
-                style: TextStyle(fontSize: 42),
-              ),
-            ),
+            ],
           ),
-        ],
-      ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Ayo Kerjakan Kuis!',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: compact ? 18 : 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${widget.namaKelas} • ${widget.namaKategori}',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: compact ? 12 : 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Uji pengetahuanmu dan kumpulkan bintang!',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: compact ? 12 : 13,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: compact ? 5 : 8),
+              Container(
+                width: compact ? 58 : 75,
+                height: compact ? 58 : 75,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white,
+                    width: 2,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    '📝',
+                    style: TextStyle(fontSize: compact ? 32 : 42),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -417,21 +484,24 @@ class _QuisListPageState extends State<QuisListPage> {
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 13,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: cardColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  kuis.kodeKuis,
-                  style: TextStyle(
-                    color: cardColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 13,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: cardColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    kuis.kodeKuis,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: cardColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
               ),
@@ -490,8 +560,6 @@ class _QuisListPageState extends State<QuisListPage> {
             ],
           ),
           const SizedBox(height: 17),
-
-          // TOMBOL MULAI KUIS
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -519,9 +587,7 @@ class _QuisListPageState extends State<QuisListPage> {
                 size: 25,
               ),
               label: Text(
-                kategoriTerkunci
-                    ? 'Kuis Terkunci'
-                    : 'Mulai Kuis',
+                kategoriTerkunci ? 'Kuis Terkunci' : 'Mulai Kuis',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
@@ -533,9 +599,7 @@ class _QuisListPageState extends State<QuisListPage> {
                 foregroundColor: Colors.white,
                 disabledForegroundColor: Colors.white,
                 elevation: kategoriTerkunci ? 0 : 3,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 14,
-                ),
+                padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                   side: const BorderSide(
@@ -558,9 +622,7 @@ class _QuisListPageState extends State<QuisListPage> {
       child: Center(
         child: Column(
           children: [
-            CircularProgressIndicator(
-              color: _blue,
-            ),
+            CircularProgressIndicator(color: _blue),
             SizedBox(height: 15),
             Text(
               'Sedang memuat kuis...',
@@ -589,10 +651,7 @@ class _QuisListPageState extends State<QuisListPage> {
       ),
       child: const Column(
         children: [
-          Text(
-            '📚',
-            style: TextStyle(fontSize: 55),
-          ),
+          Text('📚', style: TextStyle(fontSize: 55)),
           SizedBox(height: 12),
           Text(
             'Belum Ada Kuis',
@@ -677,7 +736,7 @@ class _QuisListPageState extends State<QuisListPage> {
   }
 }
 
-// TOMBOL KEMBALI SEPERTI TAMPILAN WEB
+// TOMBOL KEMBALI SAMA DENGAN HALAMAN PILIH KATEGORI
 class _BackButton extends StatelessWidget {
   const _BackButton({required this.onPressed});
 
@@ -688,7 +747,10 @@ class _BackButton extends StatelessWidget {
     return Material(
       color: const Color(0xFF5EBEF3),
       shape: const CircleBorder(
-        side: BorderSide(color: Colors.white, width: 3),
+        side: BorderSide(
+          color: Colors.white,
+          width: 3,
+        ),
       ),
       child: InkWell(
         customBorder: const CircleBorder(),

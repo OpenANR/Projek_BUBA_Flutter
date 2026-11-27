@@ -4,37 +4,36 @@ import '../../models/materi_model.dart';
 import '../../services/materi_services.dart';
 import 'materi.dart';
 
-class MateriListPage extends StatefulWidget {
+class ListMateriPage extends StatefulWidget {
   final int kelasId;
   final int kategoriId;
   final String namaKelas;
   final String namaKategori;
 
-  const MateriListPage({
+  const ListMateriPage({
     super.key,
     required this.kelasId,
     required this.kategoriId,
-    required this.namaKelas,
-    required this.namaKategori,
+    this.namaKelas = '',
+    this.namaKategori = '',
   });
 
   @override
-  State<MateriListPage> createState() => _MateriListPageState();
+  State<ListMateriPage> createState() => _ListMateriPageState();
 }
 
-class _MateriListPageState extends State<MateriListPage> {
+class _ListMateriPageState extends State<ListMateriPage> {
   final MateriServices _services = MateriServices();
 
   List<MateriModel> daftarMateri = [];
-
   bool loading = true;
   String? error;
 
-  final Color blue = const Color(0xFF2865CC);
-  final Color darkBlue = const Color(0xFF2459A6);
-  final Color lightBlue = const Color(0xFF5EBEF3);
-  final Color green = const Color(0xFF71BF4F);
-  final Color orange = const Color(0xFFFAA63A);
+  static const Color _blue = Color(0xFF2865CC);
+  static const Color _darkBlue = Color(0xFF2459A6);
+  static const Color _lightBlue = Color(0xFF5EBEF3);
+  static const Color _green = Color(0xFF71BF4F);
+  static const Color _orange = Color(0xFFFAA63A);
 
   @override
   void initState() {
@@ -42,9 +41,6 @@ class _MateriListPageState extends State<MateriListPage> {
     loadMateri();
   }
 
-  // ==========================================================
-  // AMBIL DATA MATERI
-  // ==========================================================
   Future<void> loadMateri() async {
     if (!mounted) return;
 
@@ -54,771 +50,534 @@ class _MateriListPageState extends State<MateriListPage> {
     });
 
     try {
-      print('======================================');
-      print('REQUEST LIST MATERI');
-      print('Kelas ID    : ${widget.kelasId}');
-      print('Kategori ID : ${widget.kategoriId}');
-      print('======================================');
-
-      final hasil = await _services.getMateri(
+      final data = await _services.getMateri(
         kelasId: widget.kelasId,
         kategoriId: widget.kategoriId,
       );
 
-      print('Jumlah materi: ${hasil.length}');
-
       if (!mounted) return;
 
       setState(() {
-        daftarMateri = hasil;
+        daftarMateri = data;
         loading = false;
       });
     } catch (e) {
-      print('ERROR LIST MATERI: $e');
-
       if (!mounted) return;
 
       setState(() {
-        loading = false;
         error = e.toString();
+        loading = false;
       });
     }
   }
 
-  // ==========================================================
-  // BUILD
-  // ==========================================================
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-
-      appBar: AppBar(
-        backgroundColor: blue,
-        elevation: 0,
-
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: Colors.white,
-          ),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-
-        title: const Text(
-          'DAFTAR MATERI',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 21,
-          ),
-        ),
-
-        centerTitle: true,
-      ),
-
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage(
-              'assets/images/backgroundSplash.png',
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: _BackButton(
+              onPressed: () => Navigator.maybePop(context),
             ),
-            fit: BoxFit.cover,
           ),
-        ),
-
-        child: SafeArea(
-          child: RefreshIndicator(
-            onRefresh: loadMateri,
-
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-
-              padding: const EdgeInsets.fromLTRB(
-                20,
-                20,
-                20,
-                35,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 56),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 10,
               ),
-
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-
-                  // ==================================================
-                  // WELCOME CARD
-                  // ==================================================
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.12),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-
-                    child: Row(
-                      children: [
-
-                        Container(
-                          width: 60,
-                          height: 60,
-
-                          decoration: BoxDecoration(
-                            color: lightBlue,
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-
-                          child: const Icon(
-                            Icons.menu_book_rounded,
-                            color: Colors.white,
-                            size: 33,
-                          ),
-                        ),
-
-                        const SizedBox(width: 15),
-
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment:
-                                CrossAxisAlignment.start,
-
-                            children: [
-
-                              const Text(
-                                'Yuk Belajar! 📚',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF2459A6),
-                                ),
-                              ),
-
-                              const SizedBox(height: 5),
-
-                              Text(
-                                widget.namaKategori,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade600,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E60BE),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: Colors.white,
+                  width: 3.5,
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x33000000),
+                    blurRadius: 8,
+                    offset: Offset(0, 4),
                   ),
-
-                  const SizedBox(height: 18),
-
-                  // ==================================================
-                  // INFO KELAS & KATEGORI
-                  // ==================================================
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(17),
-
-                    decoration: BoxDecoration(
-                      color: blue,
-                      borderRadius: BorderRadius.circular(20),
-
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.12),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-
-                    child: Row(
-                      children: [
-
-                        Expanded(
-                          child: _infoItem(
-                            Icons.school_rounded,
-                            'Kelas',
-                            widget.namaKelas,
-                          ),
-                        ),
-
-                        Container(
-                          width: 1,
-                          height: 45,
-                          color: Colors.white.withOpacity(0.4),
-                        ),
-
-                        Expanded(
-                          child: _infoItem(
-                            Icons.category_rounded,
-                            'Kategori',
-                            widget.namaKategori,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 25),
-
-                  // ==================================================
-                  // JUDUL
-                  // ==================================================
-                  Row(
-                    children: [
-
-                      Container(
-                        width: 6,
-                        height: 28,
-
-                        decoration: BoxDecoration(
-                          color: orange,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-
-                      const SizedBox(width: 10),
-
-                      const Text(
-                        'Pilih Materi',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2459A6),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  // ==================================================
-                  // LOADING
-                  // ==================================================
-                  if (loading)
-                    _buildLoading()
-
-                  // ==================================================
-                  // ERROR
-                  // ==================================================
-                  else if (error != null)
-                    _buildError()
-
-                  // ==================================================
-                  // DATA KOSONG
-                  // ==================================================
-                  else if (daftarMateri.isEmpty)
-                    _buildEmpty()
-
-                  // ==================================================
-                  // LIST MATERI
-                  // ==================================================
-                  else
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics:
-                          const NeverScrollableScrollPhysics(),
-
-                      itemCount: daftarMateri.length,
-
-                      itemBuilder: (context, index) {
-                        return _buildMateriCard(
-                          daftarMateri[index],
-                          index,
-                        );
-                      },
-                    ),
                 ],
               ),
+              child: const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'DAFTAR MATERI',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 2,
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  // ==========================================================
-  // INFO ITEM
-  // ==========================================================
-  Widget _infoItem(
-    IconData icon,
-    String label,
-    String value,
-  ) {
-    return Row(
-      children: [
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final horizontalPadding = screenWidth >= 700 ? 28.0 : 16.0;
 
-        Icon(
-          icon,
-          color: Colors.white,
-          size: 27,
-        ),
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFF8EE),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            'assets/images/backgroundSplash.png',
+            width: double.infinity,
+            height: double.infinity,
+            fit: BoxFit.cover,
+            alignment: Alignment.center,
+            errorBuilder: (context, error, stackTrace) {
+              return const ColoredBox(
+                color: Color(0xFF5CB8E4),
+              );
+            },
+          ),
+          SafeArea(
+            child: Column(
+              children: [
+                const SizedBox(height: 16),
+                _buildHeader(),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: RefreshIndicator(
+                    color: _blue,
+                    onRefresh: loadMateri,
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: EdgeInsets.fromLTRB(
+                        horizontalPadding,
+                        12,
+                        horizontalPadding,
+                        30,
+                      ),
+                      children: [
+                        Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth: 900,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _buildWelcomeCard(),
+                                const SizedBox(height: 20),
+                                _buildInfoCard(),
+                                const SizedBox(height: 16),
+                                if (loading)
+                                  _buildLoading()
+                                else if (error != null)
+                                  _buildError()
+                                else if (daftarMateri.isEmpty)
+                                  _buildEmpty()
+                                else
+                                  ...List.generate(
+                                    daftarMateri.length,
+                                    (index) => _buildCard(
+                                      daftarMateri[index],
+                                      index,
+                                    ),
+                                  ),
+                                const SizedBox(height: 10),
+                                const Center(
+                                  child: Text(
+                                    'BUBA • Belajar sambil bermain 🌈',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w900,
+                                      shadows: [
+                                        Shadow(
+                                          color: Colors.black54,
+                                          blurRadius: 4,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-        const SizedBox(width: 10),
+  // KARTU SAMBUTAN
+  Widget _buildWelcomeCard() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 380;
 
-        Expanded(
-          child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
-
+        return Container(
+          padding: EdgeInsets.all(compact ? 15 : 20),
+          decoration: BoxDecoration(
+            color: const Color(0xFF71BF4F),
+            borderRadius: BorderRadius.circular(25),
+            border: Border.all(
+              color: Colors.white,
+              width: 4,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Row(
             children: [
-
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Ayo Belajar Materi!',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: compact ? 18 : 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${widget.namaKelas} • ${widget.namaKategori}',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: compact ? 12 : 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Pilih materi di bawah ini untuk mulai belajar hal baru!',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: compact ? 12 : 13,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-
-              const SizedBox(height: 3),
-
-              Text(
-                value,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
+              const SizedBox(width: 8),
+              Container(
+                width: compact ? 58 : 75,
+                height: compact ? 58 : 75,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white,
+                    width: 2,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    '📚',
+                    style: TextStyle(fontSize: compact ? 32 : 42),
+                  ),
                 ),
               ),
             ],
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 
-  // ==========================================================
-  // LOADING
-  // ==========================================================
-  Widget _buildLoading() {
+  // KARTU INFORMASI JUMLAH MATERI
+  Widget _buildInfoCard() {
     return Container(
-      width: double.infinity,
       padding: const EdgeInsets.symmetric(
-        vertical: 55,
+        horizontal: 17,
+        vertical: 14,
       ),
-
-      child: Column(
-        children: [
-
-          CircularProgressIndicator(
-            color: blue,
-          ),
-
-          const SizedBox(height: 15),
-
-          const Text(
-            'Sedang mengambil materi...',
-            style: TextStyle(
-              fontSize: 15,
-              color: Colors.black54,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ==========================================================
-  // ERROR
-  // ==========================================================
-  Widget _buildError() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(25),
-
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-      ),
-
-      child: Column(
-        children: [
-
-          const Icon(
-            Icons.error_outline_rounded,
-            size: 60,
-            color: Colors.redAccent,
-          ),
-
-          const SizedBox(height: 12),
-
-          const Text(
-            'Gagal mengambil materi',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.redAccent,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          Text(
-            error ?? 'Terjadi kesalahan.',
-            textAlign: TextAlign.center,
-
-            style: const TextStyle(
-              fontSize: 13,
-              color: Colors.black54,
-            ),
-          ),
-
-          const SizedBox(height: 18),
-
-          ElevatedButton.icon(
-            onPressed: loadMateri,
-
-            icon: const Icon(
-              Icons.refresh_rounded,
-            ),
-
-            label: const Text(
-              'Coba Lagi',
-            ),
-
-            style: ElevatedButton.styleFrom(
-              backgroundColor: blue,
-              foregroundColor: Colors.white,
-
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ==========================================================
-  // EMPTY
-  // ==========================================================
-  Widget _buildEmpty() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(30),
-
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-      ),
-
-      child: Column(
-        children: [
-
-          Icon(
-            Icons.menu_book_outlined,
-            size: 65,
-            color: Colors.grey.shade400,
-          ),
-
-          const SizedBox(height: 15),
-
-          const Text(
-            'Belum Ada Materi',
-            style: TextStyle(
-              fontSize: 19,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2459A6),
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            'Materi untuk kategori ini belum tersedia.',
-            textAlign: TextAlign.center,
-
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ==========================================================
-  // CARD MATERI
-  // ==========================================================
-  Widget _buildMateriCard(
-    MateriModel materi,
-    int index,
-  ) {
-    final List<Color> warna = [
-      const Color(0xFF71BF4F),
-      const Color(0xFFFAA63A),
-      const Color(0xFFD8759C),
-      const Color(0xFF5EBEF3),
-      const Color(0xFF9C65CD),
-      const Color(0xFFFFD629),
-      const Color(0xFF3CBDB1),
-      const Color(0xFFF36B6B),
-    ];
-
-    final Color warnaCard =
-        warna[index % warna.length];
-
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 18),
-
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(23),
-
+        border: Border.all(
+          color: _green,
+          width: 2.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.12),
-            blurRadius: 9,
-            offset: const Offset(0, 5),
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
-
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-
-        child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
-
-          children: [
-
-            // ==================================================
-            // KODE + ICON
-            // ==================================================
-            Row(
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: _green.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.menu_book_rounded,
+              color: _green,
+              size: 26,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const Text(
+                  'Materi Pembelajaran',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  loading
+                      ? 'Sedang memuat data...'
+                      : '${daftarMateri.length} materi siap dipelajari',
+                  style: const TextStyle(
+                    color: Colors.black54,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-                Container(
+  // KARTU SETIAP MATERI
+  Widget _buildCard(MateriModel materi, int index) {
+    final colors = [
+      _green,
+      _blue,
+      _orange,
+      const Color(0xFFAB70D6),
+    ];
+
+    final cardColor = colors[index % colors.length];
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: cardColor,
+          width: 2.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Flexible(
+                child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
-                    vertical: 7,
+                    vertical: 6,
                   ),
-
                   decoration: BoxDecoration(
-                    color: warnaCard.withOpacity(0.15),
-                    borderRadius:
-                        BorderRadius.circular(12),
+                    color: cardColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-
                   child: Text(
-                    materi.kodeMateri,
+                    materi.kodeMateri.isNotEmpty
+                        ? materi.kodeMateri
+                        : 'MATERI ${index + 1}',
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: warnaCard,
+                      color: cardColor,
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
                     ),
                   ),
                 ),
-
-                const Spacer(),
-
-                Container(
-                  width: 44,
-                  height: 44,
-
-                  decoration: BoxDecoration(
-                    color: warnaCard,
-                    borderRadius:
-                        BorderRadius.circular(14),
-                  ),
-
-                  child: const Icon(
-                    Icons.menu_book_rounded,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 15),
-
-            // ==================================================
-            // NAMA MATERI
-            // ==================================================
-            Text(
-              materi.namaMateri,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: darkBlue,
               ),
-            ),
-
-            const SizedBox(height: 8),
-
-            // ==================================================
-            // ISI SINGKAT
-            // ==================================================
-            Text(
-              _potongIsi(materi.isiMateri),
-
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-
-              style: TextStyle(
-                fontSize: 14,
-                height: 1.5,
-                color: Colors.grey.shade700,
+              const Spacer(),
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: cardColor.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.auto_stories_rounded,
+                  color: cardColor,
+                  size: 24,
+                ),
               ),
-            ),
-
-            const SizedBox(height: 15),
-
-            Divider(
-              color: Colors.grey.shade200,
-              height: 1,
-            ),
-
-            const SizedBox(height: 12),
-
-            // ==================================================
-            // INFORMASI
-            // ==================================================
-            Row(
-              children: [
-
-                Icon(
-                  Icons.menu_book_rounded,
-                  size: 18,
-                  color: warnaCard,
-                ),
-
-                const SizedBox(width: 6),
-
-                const Text(
-                  'Materi pembelajaran',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.black54,
-                  ),
-                ),
-
-                const Spacer(),
-
-                if (materi.gambar != null &&
-                    materi.gambar!.isNotEmpty)
-                  const Row(
-                    children: [
-
-                      Icon(
-                        Icons.image_rounded,
-                        size: 18,
-                        color: Colors.green,
-                      ),
-
-                      SizedBox(width: 5),
-
-                      Text(
-                        'Gambar',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.black54,
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (materi.gambarUrl != null && materi.gambarUrl!.isNotEmpty) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Image.network(
+                    materi.gambarUrl!,
+                    width: 70,
+                    height: 70,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          color: cardColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(14),
                         ),
-                      ),
-                    ],
-                  ),
-
-                if (materi.audio != null &&
-                    materi.audio!.isNotEmpty)
-                  const Row(
-                    children: [
-
-                      SizedBox(width: 10),
-
-                      Icon(
-                        Icons.volume_up_rounded,
-                        size: 18,
-                        color: Colors.orange,
-                      ),
-
-                      SizedBox(width: 5),
-
-                      Text(
-                        'Audio',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.black54,
+                        child: Icon(
+                          Icons.image_outlined,
+                          color: cardColor,
+                          size: 32,
                         ),
-                      ),
-                    ],
+                      );
+                    },
                   ),
+                ),
+                const SizedBox(width: 14),
               ],
-            ),
-
-            const SizedBox(height: 15),
-
-            // ==================================================
-            // BUTTON PELAJARI
-            // ==================================================
-            SizedBox(
-              width: double.infinity,
-
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-
-                    MaterialPageRoute(
-                      builder: (_) => MateriPage(
-                        materi: materi,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      materi.namaMateri,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF263238),
+                        height: 1.3,
                       ),
                     ),
-                  );
-                },
-
-                icon: const Icon(
-                  Icons.play_arrow_rounded,
-                  size: 25,
+                    const SizedBox(height: 6),
+                    Text(
+                      'Ketuk untuk membaca & mendengarkan',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
                 ),
-
-                label: const Text(
-                  'Pelajari Materi',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          const Divider(
+            color: Color(0xFFEEEEEE),
+            thickness: 1,
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MateriDetailPage(
+                      kodeMateri: materi.kodeMateri,
+                      namaKelas: widget.namaKelas,
+                      namaKategori: widget.namaKategori,
+                      initialMateri: materi,
+                      daftarMateri: daftarMateri,
+                      currentIndex: index,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(
+                Icons.menu_book_rounded,
+                size: 22,
+              ),
+              label: const Text(
+                'Mulai Belajar',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: cardColor,
+                foregroundColor: Colors.white,
+                elevation: 3,
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: const BorderSide(
+                    color: Colors.white,
+                    width: 2,
                   ),
                 ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: warnaCard,
-                  foregroundColor: Colors.white,
-
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 13,
-                  ),
-
-                  shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(15),
-                  ),
-                ),
+  // LOADING
+  Widget _buildLoading() {
+    return const Padding(
+      padding: EdgeInsets.all(45),
+      child: Center(
+        child: Column(
+          children: [
+            CircularProgressIndicator(color: _green),
+            SizedBox(height: 15),
+            Text(
+              'Sedang memuat materi...',
+              style: TextStyle(
+                color: _darkBlue,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],
@@ -827,29 +586,123 @@ class _MateriListPageState extends State<MateriListPage> {
     );
   }
 
-  // ==========================================================
-  // POTONG ISI
-  // ==========================================================
-  String _potongIsi(String text) {
-    String bersih = text
-        .replaceAll(
-          RegExp(r'<[^>]*>'),
-          '',
-        )
-        .replaceAll(
-          '\n',
-          ' ',
-        )
-        .trim();
+  // JIKA MATERI KOSONG
+  Widget _buildEmpty() {
+    return Container(
+      padding: const EdgeInsets.all(30),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(23),
+        border: Border.all(
+          color: _lightBlue,
+          width: 2,
+        ),
+      ),
+      child: const Column(
+        children: [
+          Icon(
+            Icons.menu_book_outlined,
+            size: 55,
+            color: _blue,
+          ),
+          SizedBox(height: 12),
+          Text(
+            'Materi Belum Tersedia',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: _darkBlue,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            'Belum ada materi pembelajaran untuk kategori ini. '
+            'Guru akan segera menambahkannya.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey, height: 1.4),
+          ),
+        ],
+      ),
+    );
+  }
 
-    if (bersih.isEmpty) {
-      return 'Materi pembelajaran tersedia. Yuk mulai belajar!';
-    }
+  // JIKA ERROR
+  Widget _buildError() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(23),
+        border: Border.all(
+          color: Colors.redAccent,
+          width: 2,
+        ),
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.cloud_off_rounded,
+            size: 55,
+            color: Colors.redAccent,
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Gagal Memuat Materi',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.redAccent,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            error ?? 'Terjadi kesalahan tidak terduga.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.grey, height: 1.4),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: loadMateri,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('COBA LAGI'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _blue,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-    if (bersih.length <= 150) {
-      return bersih;
-    }
+class _BackButton extends StatelessWidget {
+  const _BackButton({required this.onPressed});
 
-    return '${bersih.substring(0, 150)}...';
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFF5EBEF3),
+      shape: const CircleBorder(
+        side: BorderSide(color: Colors.white, width: 3),
+      ),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onPressed,
+        child: const Padding(
+          padding: EdgeInsets.all(9),
+          child: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.white,
+            size: 20,
+          ),
+        ),
+      ),
+    );
   }
 }
