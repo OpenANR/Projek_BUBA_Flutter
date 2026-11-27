@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -19,18 +20,20 @@ class AuthResult {
 
 class AuthServices {
 
-  static const String baseUrl = 'http://192.168.1.105:8000/api';
+  static const String baseUrl = 'http://10.10.20.99:8000/api';
 
   Future<AuthResult> login(String email, String password) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/login'),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({'email': email, 'password': password}),
-      );
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/login'),
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({'email': email, 'password': password}),
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
@@ -85,6 +88,12 @@ class AuthServices {
         isSuccess: false,
         errorMessage: 'Login gagal (HTTP ${response.statusCode}).',
       );
+    } on TimeoutException {
+      return AuthResult(
+        isSuccess: false,
+        errorMessage:
+            'Koneksi ke server terlalu lama. Periksa jaringan lalu coba lagi.',
+      );
     } on FormatException {
       return AuthResult(
         isSuccess: false,
@@ -117,13 +126,15 @@ class AuthServices {
       final token = await getToken();
       if (token == null) return false;
 
-      final response = await http.get(
-        Uri.parse('$baseUrl/email/status'),
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/email/status'),
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
@@ -148,13 +159,15 @@ class AuthServices {
       final token = await getToken();
       if (token == null) return 'Token tidak ditemukan. Silakan login kembali.';
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/email/resend'),
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/email/resend'),
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 15));
 
       final decoded = jsonDecode(response.body);
       if (decoded is Map<String, dynamic> && decoded['message'] != null) {

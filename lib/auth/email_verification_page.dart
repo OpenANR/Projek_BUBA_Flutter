@@ -19,6 +19,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
   Timer? _timer;
   bool _isChecking = false;
   bool _isResending = false;
+  bool _isLoggingOut = false;
   int _resendCooldown = 0;
   Timer? _cooldownTimer;
 
@@ -115,14 +116,17 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
   }
 
   Future<void> _handleLogout() async {
+    if (_isLoggingOut) return;
+    setState(() => _isLoggingOut = true);
+
     _timer?.cancel();
     _cooldownTimer?.cancel();
     await AuthServices.logout();
 
     if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
+    Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => const AuthPage()),
+      (route) => false,
     );
   }
 
@@ -350,7 +354,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
 
                 // Tombol Logout / Kembali
                 OutlinedButton.icon(
-                  onPressed: _handleLogout,
+                  onPressed: _isLoggingOut ? null : _handleLogout,
                   icon: const Icon(Icons.arrow_back_rounded, size: 18, color: Colors.grey),
                   label: const Text(
                     'Kembali ke Halaman Login',

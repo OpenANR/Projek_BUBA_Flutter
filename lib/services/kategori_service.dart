@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/kategori_model.dart';
 import 'auth_services.dart';
@@ -16,6 +17,8 @@ class KategoriServiceException implements Exception {
 }
 
 class KategoriService {
+  static String _cacheKey(int kelasId) => 'cached_kategori_kelas_$kelasId';
+
   Future<List<KategoriModel>> getKategori({required int kelasId}) async {
     try {
       final token = await AuthServices.getToken();
@@ -52,6 +55,7 @@ class KategoriService {
         );
       }
       if (response.statusCode == 204 || response.body.trim().isEmpty) {
+        await _saveCache(kelasId, const []);
         return const [];
       }
 
@@ -65,8 +69,8 @@ class KategoriService {
       final rawList = decoded is List
           ? decoded
           : decoded is Map<String, dynamic>
-          ? (decoded['kategori'] ?? decoded['data'])
-          : null;
+              ? (decoded['kategori'] ?? decoded['data'])
+              : null;
 
       if (rawList is! List) {
         throw const FormatException(
@@ -74,7 +78,7 @@ class KategoriService {
         );
       }
 
-      return rawList
+      final result = rawList
           .map((item) {
             if (item is! Map) {
               throw const FormatException(
@@ -84,17 +88,54 @@ class KategoriService {
             return KategoriModel.fromJson(Map<String, dynamic>.from(item));
           })
           .toList(growable: false);
+
+      // Simpan ke SharedPreferences setiap kali berhasil fetch dari API
+      await _saveCache(kelasId, result);
+
+      return result;
     } on TimeoutException {
-      throw const KategoriServiceException(
+      return _fallbackOrThrow(
+        kelasId,
         'Koneksi ke server terlalu lama. Periksa jaringan lalu coba lagi.',
       );
     } on http.ClientException {
-      throw const KategoriServiceException(
+      return _fallbackOrThrow(
+        kelasId,
         'Tidak dapat terhubung ke server. Periksa alamat server dan jaringan.',
       );
     } on FormatException catch (error) {
       throw KategoriServiceException(error.message);
     }
+  }
+
+  Future<void> _saveCache(int kelasId, List<KategoriModel> data) async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = jsonEncode(data.map((e) => e.toJson()).toList());
+    await prefs.setString(_cacheKey(kelasId), jsonString);
+  }
+
+  Future<List<KategoriModel>> _getCache(int kelasId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = prefs.getString(_cacheKey(kelasId));
+    if (jsonString == null || jsonString.isEmpty) {
+      return const [];
+    }
+
+    final decoded = jsonDecode(jsonString) as List<dynamic>;
+    return decoded
+        .map((item) => KategoriModel.fromJson(Map<String, dynamic>.from(item)))
+        .toList(growable: false);
+  }
+
+  Future<List<KategoriModel>> _fallbackOrThrow(
+    int kelasId,
+    String errorMessage,
+  ) async {
+    final cached = await _getCache(kelasId);
+    if (cached.isNotEmpty) {
+      return cached;
+    }
+    throw KategoriServiceException(errorMessage);
   }
 
   String? _responseMessage(String body) {
