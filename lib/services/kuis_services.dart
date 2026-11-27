@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/kuis_model.dart';
 import 'auth_services.dart';
@@ -13,9 +14,7 @@ class KuisServices {
     final token = await AuthServices.getToken();
 
     if (token == null || token.isEmpty) {
-      throw Exception(
-        'Token tidak ditemukan. Silakan login kembali.',
-      );
+      throw Exception('Silakan login kembali.');
     }
 
     return {
@@ -25,7 +24,6 @@ class KuisServices {
     };
   }
 
-  // Mengubah response Laravel menjadi Map.
   Map<String, dynamic> _decodeResponse(http.Response response) {
     try {
       final decoded = jsonDecode(response.body);
@@ -36,13 +34,10 @@ class KuisServices {
 
       throw Exception('Format respons server tidak valid.');
     } on FormatException {
-      throw Exception(
-        'Respons server tidak valid (HTTP ${response.statusCode}).',
-      );
+      throw Exception('Respons server tidak valid.');
     }
   }
 
-  // Mengambil seluruh soal berdasarkan kelas dan kategori.
   Future<List<KuisModel>> getKuis({
     required int kelasId,
     required int kategoriId,
@@ -60,7 +55,6 @@ class KuisServices {
     );
 
     final data = _decodeResponse(response);
-
     kategoriTerkunci = data['terkunci'] == true;
 
     if (response.statusCode == 200 && data['success'] == true) {
@@ -74,12 +68,9 @@ class KuisServices {
       }).toList();
     }
 
-    throw Exception(
-      data['message'] ?? 'Gagal mengambil daftar kuis.',
-    );
+    throw Exception(data['message'] ?? 'Gagal mengambil daftar kuis.');
   }
 
-  // Mengirim jawaban siswa ke Laravel.
   Future<Map<String, dynamic>> submitKuis({
     required int quisId,
     required int kelasId,
@@ -106,9 +97,6 @@ class KuisServices {
     final data = _decodeResponse(response);
 
     if (response.statusCode == 200 && data['success'] == true) {
-      // Mendukung response Laravel berbentuk:
-      // { "success": true, "hasil": {...} }
-      // maupun response dengan nilai langsung di bagian utama.
       final hasil = data['hasil'];
 
       if (hasil is Map) {
@@ -118,32 +106,67 @@ class KuisServices {
       return data;
     }
 
-    throw Exception(
-      data['message'] ?? 'Gagal mengirim jawaban kuis.',
-    );
+    throw Exception(data['message'] ?? 'Gagal mengirim jawaban kuis.');
   }
 
-  // Mengambil riwayat hasil kuis.
+  // Mengambil riwayat dari server atau penyimpanan lokal.
   Future<List<Map<String, dynamic>>> getRiwayatKuis() async {
-    final uri = Uri.parse('$baseUrl/siswa/hasil-kuis');
+    final cacheKey = await AuthServices.getRiwayatCacheKey();
 
-    final response = await http.get(
-      uri,
-      headers: await _headers(),
-    );
-
-    final data = _decodeResponse(response);
-
-    if (response.statusCode == 200 && data['success'] == true) {
-      final List daftarHasil = data['data'] ?? [];
-
-      return daftarHasil
-          .map((item) => Map<String, dynamic>.from(item))
-          .toList();
+    if (cacheKey == null) {
+      throw Exception('Silakan login kembali untuk melihat riwayat.');
     }
 
-    throw Exception(
-      data['message'] ?? 'Gagal mengambil riwayat kuis.',
-    );
+    final prefs = await SharedPreferences.getInstance();
+
+    try {
+      final uri = Uri.parse('$baseUrl/siswa/hasil-kuis');
+
+      final response = await http
+          .get(
+            uri,
+            headers: await _headers(),
+          )
+          .timeout(const Duration(seconds: 12));
+
+      final data = _decodeResponse(response);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        final List daftarHasil = data['data'] ?? [];
+
+        final hasil = daftarHasil
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList();
+
+        // Simpan data terbaru berdasarkan akun siswa.
+        await prefs.setString(cacheKey, jsonEncode(hasil));
+
+        return hasil;
+      }
+
+      throw Exception('Tidak berhasil mengambil data terbaru.');
+    } catch (_) {
+      // Jika server tidak dapat dihubungi, gunakan data lokal.
+      final dataLokal = prefs.getString(cacheKey);
+
+      if (dataLokal != null) {
+        try {
+          final decoded = jsonDecode(dataLokal);
+
+          if (decoded is List) {
+            return decoded
+                .map((item) => Map<String, dynamic>.from(item))
+                .toList();
+          }
+        } catch (_) {
+          // Cache rusak atau format tidak sesuai.
+        }
+      }
+
+      throw Exception(
+        'Riwayat reward belum tersedia di perangkat ini. '
+        'Hubungkan ke internet untuk memuat riwayat terlebih dahulu.',
+      );
+    }
   }
 }

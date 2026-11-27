@@ -1,15 +1,13 @@
 class KategoriModel {
-  const KategoriModel({
-    required this.id,
-    required this.namaKategori,
-  });
+  const KategoriModel({required this.id, required this.namaKategori});
 
   final int id;
   final String namaKategori;
 
   factory KategoriModel.fromJson(Map<String, dynamic> json) {
     final rawId = json['id'] ?? json['kategori_id'];
-    final rawNama = json['nama_kategori'] ??
+    final rawNama =
+        json['nama_kategori'] ??
         json['namaKategori'] ??
         json['nama'] ??
         json['name'];
@@ -22,5 +20,9 @@ class KategoriModel {
     }
 
     return KategoriModel(id: id, namaKategori: nama);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'id': id, 'nama_kategori': namaKategori};
   }
 }

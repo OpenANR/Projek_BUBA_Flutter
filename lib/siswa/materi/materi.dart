@@ -1,7 +1,7 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/materi_model.dart';
+import '../../services/audio_player/app_audio_player.dart';
 import '../../services/materi_services.dart';
 
 typedef MateriPage = MateriDetailPage;
@@ -30,7 +30,7 @@ class MateriDetailPage extends StatefulWidget {
 
 class _MateriDetailPageState extends State<MateriDetailPage> {
   final MateriServices _services = MateriServices();
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  final AppAudioPlayer _audioPlayer = AppAudioPlayer();
 
   late String _currentKodeMateri;
   late int _currentIndex;
@@ -361,7 +361,15 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
                 const SizedBox(height: 16),
               ],
 
-              if (materi.gambarUrl != null &&
+              // Gambar Materi jika tersedia
+              if (materi.gambarUrls.isNotEmpty) ...[
+                ...materi.gambarUrls.map(
+                  (url) => Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: _buildImageCard(url),
+                  ),
+                ),
+              ] else if (materi.gambarUrl != null &&
                   materi.gambarUrl!.isNotEmpty) ...[
                 _buildImageCard(
                   materi.gambarUrl!,
@@ -640,8 +648,22 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
         child: Image.network(
           imageUrl,
           fit: BoxFit.contain,
-          errorBuilder:
-              (context, error, stackTrace) {
+          webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Container(
+              height: 220,
+              alignment: Alignment.center,
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                        (loadingProgress.expectedTotalBytes ?? 1)
+                    : null,
+                color: _green,
+              ),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) {
             return Container(
               height: 180,
               color:

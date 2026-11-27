@@ -99,7 +99,7 @@ class _AuthPageState extends State<AuthPage> {
                 keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(
                   labelText: 'Email',
-                  hintText: 'juvePCX@example.com',
+                  hintText: 'siswa@example.com',
                   prefixIcon: Icon(Icons.email_outlined),
                 ),
                 validator: (value) {

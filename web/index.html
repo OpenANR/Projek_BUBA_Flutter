@@ -19,6 +19,9 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="A new Flutter project.">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -41,6 +44,51 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
-  <script src="flutter_bootstrap.js" async></script>
+  <script>
+    (function () {
+      var loadBootstrap = function () {
+        var script = document.createElement('script');
+        script.src = 'flutter_bootstrap.js?v=' + Date.now();
+        script.async = true;
+        document.body.appendChild(script);
+      };
+
+      if ('serviceWorker' in navigator) {
+        var hadController = !!navigator.serviceWorker.controller;
+        navigator.serviceWorker.getRegistrations().then(function (registrations) {
+          return Promise.all(
+            registrations.map(function (registration) {
+              return registration.unregister();
+            })
+          );
+        }).then(function (results) {
+          var unregisteredAny = results.some(Boolean);
+          if ('caches' in window) {
+            return caches.keys().then(function (keys) {
+              return Promise.all(
+                keys.map(function (key) {
+                  return caches.delete(key);
+                })
+              );
+            }).then(function () {
+              return unregisteredAny;
+            });
+          }
+          return unregisteredAny;
+        }).then(function (unregisteredAny) {
+          if ((hadController || unregisteredAny) && !sessionStorage.getItem('sw_cleared_reloaded')) {
+            sessionStorage.setItem('sw_cleared_reloaded', '1');
+            window.location.reload();
+            return;
+          }
+          loadBootstrap();
+        }).catch(function () {
+          loadBootstrap();
+        });
+      } else {
+        loadBootstrap();
+      }
+    })();
+  </script>
 </body>
 </html>

@@ -39,12 +39,81 @@ class KuisModel {
     return '${uri.scheme}://${uri.authority}/';
   }
 
-  // Membuat URL gambar. Bagian ini tetap menggunakan storage Laravel.
+  // Membersihkan kurung siku, tanda petik, dan spasi yang melilit string
+  static String _cleanWrapping(String text) {
+    var s = text.trim();
+    while (s.isNotEmpty &&
+        (s.startsWith('[') ||
+            s.startsWith('"') ||
+            s.startsWith("'") ||
+            s.startsWith(r'\'))) {
+      s = s.substring(1).trim();
+    }
+    while (s.isNotEmpty &&
+        (s.endsWith(']') ||
+            s.endsWith('"') ||
+            s.endsWith("'") ||
+            s.endsWith(r'\'))) {
+      s = s.substring(0, s.length - 1).trim();
+    }
+    return s;
+  }
+
+  // Ekstrak daftar path bersih dari berbagai format input (List, JSON String, string tunggal)
+  static List<String> _extractPaths(dynamic value) {
+    if (value == null) return [];
+
+    dynamic data = value;
+
+    if (data is String) {
+      final text = data.trim();
+      if (text.isEmpty || text == 'null') return [];
+
+      if ((text.startsWith('[') && text.endsWith(']')) ||
+          (text.startsWith('{') && text.endsWith('}'))) {
+        try {
+          data = jsonDecode(text);
+        } catch (_) {
+          final clean = _cleanWrapping(text);
+          if (clean.isNotEmpty && clean != 'null') {
+            return [clean];
+          }
+        }
+      } else {
+        final clean = _cleanWrapping(text);
+        if (clean.isNotEmpty && clean != 'null') {
+          return [clean];
+        }
+        return [];
+      }
+    }
+
+    if (data is List) {
+      final result = <String>[];
+      for (final item in data) {
+        if (item == null) continue;
+        final clean = _cleanWrapping(item.toString());
+        if (clean.isNotEmpty && clean != 'null') {
+          result.add(clean);
+        }
+      }
+      return result;
+    } else if (data is Map) {
+      final url = data['url'] ?? data['path'] ?? data['file'];
+      if (url != null) {
+        final clean = _cleanWrapping(url.toString());
+        if (clean.isNotEmpty && clean != 'null') return [clean];
+      }
+    }
+
+    return [];
+  }
+
+  // Membuat URL media (gambar / audio) ke folder storage Laravel
   static String? _makeMediaUrl(dynamic value, String baseUrl) {
     if (value == null) return null;
 
     final path = value.toString().trim();
-
     if (path.isEmpty || path == 'null') return null;
 
     final root = Uri.parse(baseUrl);
@@ -52,13 +121,10 @@ class KuisModel {
 
     final uri = Uri.tryParse(path);
 
-    if (uri != null &&
-        (uri.scheme == 'http' || uri.scheme == 'https')) {
+    if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
       final host = uri.host.toLowerCase();
 
-      if (host == '127.0.0.1' ||
-          host == 'localhost' ||
-          host == '0.0.0.0') {
+      if (host == '127.0.0.1' || host == 'localhost' || host == '0.0.0.0') {
         return uri
             .replace(
               host: root.host,
@@ -77,66 +143,20 @@ class KuisModel {
       cleanPath = 'storage/$cleanPath';
     }
 
-    return Uri.parse(serverRoot)
-        .resolve(Uri.encodeFull(cleanPath))
-        .toString();
+    return Uri.parse(serverRoot).resolve(Uri.encodeFull(cleanPath)).toString();
   }
 
-  // Membuat URL audio melalui route Laravel khusus agar tidak terkena CORS.
+  // Membuat URL audio (mengambil file pertama jika berupa list/array)
   static String? _makeAudioUrl(dynamic value, String baseUrl) {
-    if (value == null) return null;
-
-    final path = value.toString().trim();
-
-    if (path.isEmpty || path == 'null') return null;
-
-    final serverRoot = _getServerRoot(baseUrl);
-
-    final uri = Uri.tryParse(path);
-
-    String filePath;
-
-    if (uri != null &&
-        (uri.scheme == 'http' || uri.scheme == 'https')) {
-      filePath = uri.path;
-    } else {
-      filePath = path;
-    }
-
-    filePath = filePath.replaceAll('\\', '/');
-
-    // Mengambil nama file audio saja.
-    final filename = filePath.split('/').last;
-
-    if (filename.isEmpty) return null;
-
-    // Audio menggunakan route khusus Laravel.
-    return Uri.parse(serverRoot)
-        .resolve('audio-kuis/${Uri.encodeComponent(filename)}')
-        .toString();
+    final paths = _extractPaths(value);
+    if (paths.isEmpty) return null;
+    return _makeMediaUrl(paths.first, baseUrl);
   }
 
   // Membaca gambar dalam bentuk List, JSON String, atau satu path.
   static List<String> _getImages(dynamic value, String baseUrl) {
-    if (value == null) return [];
-
-    dynamic data = value;
-
-    if (data is String) {
-      final text = data.trim();
-
-      if (text.isEmpty) return [];
-
-      try {
-        data = jsonDecode(text);
-      } catch (_) {
-        data = [text];
-      }
-    }
-
-    if (data is! List) return [];
-
-    return data
+    final paths = _extractPaths(value);
+    return paths
         .map((item) => _makeMediaUrl(item, baseUrl))
         .whereType<String>()
         .toList();
@@ -148,18 +168,16 @@ class KuisModel {
   }) {
     return KuisModel(
       id: int.tryParse(map['id'].toString()) ?? 0,
-
       kodeKuis: map['kode_kuis']?.toString() ?? '',
-
       pertanyaan: map['pertanyaan']?.toString() ?? '',
 
-      // Gambar tetap menggunakan URL storage Laravel.
+      // Gambar menggunakan URL storage Laravel.
       gambarUrls: _getImages(
         map['gambar_urls'] ?? map['gambar'],
         baseUrl,
       ),
 
-      // Audio pertanyaan menggunakan route khusus.
+      // Audio pertanyaan menggunakan URL storage Laravel yang dinormalisasi.
       audioPertanyaanUrl: _makeAudioUrl(
         map['audio_pertanyaan_url'] ?? map['audio_pertanyaan'],
         baseUrl,
@@ -170,7 +188,7 @@ class KuisModel {
       pilihanC: map['pilihan_c']?.toString() ?? '',
       pilihanD: map['pilihan_d']?.toString() ?? '',
 
-      // Audio setiap pilihan jawaban menggunakan route khusus.
+      // Audio setiap pilihan jawaban.
       audioPilihanAUrl: _makeAudioUrl(
         map['audio_pilihan_a_url'] ?? map['audio_pilihan_a'],
         baseUrl,

@@ -567,37 +567,46 @@ class SplashPage extends StatelessWidget {
   }
 
   // Dialog Profil Siswa (sesuai tampilan web)
-  void _showProfileDialog(BuildContext context) {
+  void _showProfileDialog(BuildContext pageContext) {
+    final navigator = Navigator.of(pageContext, rootNavigator: true);
+    final userFuture = AuthServices.getUser();
+
     showDialog(
-      context: context,
+      context: pageContext,
       barrierDismissible: true,
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 24,
-          ),
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 380),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(28),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 16,
-                  offset: Offset(0, 8),
+      builder: (BuildContext dialogContext) {
+        bool isLoggingOut = false;
+
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return PopScope(
+              canPop: !isLoggingOut,
+              child: Dialog(
+                backgroundColor: Colors.transparent,
+                insetPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 24,
                 ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
-                  child: FutureBuilder<UserModel?>(
-                    future: AuthServices.getUser(),
-                    builder: (context, snapshot) {
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 380),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 16,
+                        offset: Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+                        child: FutureBuilder<UserModel?>(
+                          future: userFuture,
+                          builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Padding(
                           padding: EdgeInsets.symmetric(vertical: 40),
@@ -849,7 +858,9 @@ class SplashPage extends StatelessWidget {
                                     vertical: 10,
                                   ),
                                 ),
-                                onPressed: () => Navigator.of(context).pop(),
+                                onPressed: isLoggingOut
+                                    ? null
+                                    : () => Navigator.of(dialogContext).pop(),
                                 child: const Text(
                                   'Tutup',
                                   style: TextStyle(
@@ -872,26 +883,40 @@ class SplashPage extends StatelessWidget {
                                     vertical: 10,
                                   ),
                                 ),
-                                onPressed: () async {
-                                  Navigator.of(context).pop();
-                                  await AuthServices.logout();
+                                onPressed: isLoggingOut
+                                    ? null
+                                    : () async {
+                                        setDialogState(() {
+                                          isLoggingOut = true;
+                                        });
 
-                                  if (context.mounted) {
-                                    Navigator.of(context).pushAndRemoveUntil(
-                                      MaterialPageRoute(
-                                        builder: (context) => const AuthPage(),
+                                        await AuthServices.logout();
+
+                                        if (!navigator.mounted) return;
+                                        navigator.pushAndRemoveUntil(
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const AuthPage(),
+                                          ),
+                                          (route) => false,
+                                        );
+                                      },
+                                child: isLoggingOut
+                                    ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : const Text(
+                                        'Logout',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 13.5,
+                                        ),
                                       ),
-                                      (route) => false,
-                                    );
-                                  }
-                                },
-                                child: const Text(
-                                  'Logout',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 13.5,
-                                  ),
-                                ),
                               ),
                             ],
                           ),
@@ -906,7 +931,9 @@ class SplashPage extends StatelessWidget {
                   top: 12,
                   right: 12,
                   child: GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
+                    onTap: isLoggingOut
+                        ? null
+                        : () => Navigator.of(dialogContext).pop(),
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: const BoxDecoration(
@@ -931,7 +958,10 @@ class SplashPage extends StatelessWidget {
               ],
             ),
           ),
-        );
+        ),
+      );
+    },
+  );
       },
     );
   }

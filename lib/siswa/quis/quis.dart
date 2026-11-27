@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:audioplayers/audioplayers.dart';
 
 import '../../models/kuis_model.dart';
+import '../../services/audio_player/app_audio_player.dart';
 import '../../services/kuis_services.dart';
 import 'hasil_kuis.dart';
 
@@ -29,7 +29,7 @@ class QuisPage extends StatefulWidget {
 
 class _QuisPageState extends State<QuisPage> {
   final KuisServices _kuisServices = KuisServices();
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  final AppAudioPlayer _audioPlayer = AppAudioPlayer();
 
   static const Color _blue = Color(0xFF1E60BE);
   static const Color _lightBlue = Color(0xFF5EBEF3);
@@ -84,12 +84,7 @@ class _QuisPageState extends State<QuisPage> {
 
       debugPrint('Memutar audio: ${url.trim()}');
 
-      await _audioPlayer.play(
-        UrlSource(
-          url.trim(),
-          mimeType: 'audio/mpeg',
-        ),
-      );
+      await _audioPlayer.play(url.trim());
     } catch (e) {
       if (!mounted) return;
 
@@ -97,6 +92,7 @@ class _QuisPageState extends State<QuisPage> {
         isPlayingAudio = false;
       });
 
+      debugPrint('Error putar audio: $e');
       tampilkanPesan(
         'Audio tidak dapat diputar. Periksa URL audio.',
       );
