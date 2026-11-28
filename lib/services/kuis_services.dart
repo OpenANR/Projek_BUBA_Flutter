@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -49,10 +50,21 @@ class KuisServices {
       },
     );
 
-    final response = await http.get(
-      uri,
-      headers: await _headers(),
-    );
+    late http.Response response;
+
+    try {
+      response = await http
+          .get(uri, headers: await _headers())
+          .timeout(const Duration(seconds: 15));
+    } on TimeoutException {
+      throw Exception(
+        'Kuis memerlukan koneksi internet. Koneksi ke server terlalu lama.',
+      );
+    } on http.ClientException {
+      throw Exception(
+        'Kuis memerlukan koneksi internet. Periksa jaringan lalu coba lagi.',
+      );
+    }
 
     final data = _decodeResponse(response);
     kategoriTerkunci = data['terkunci'] == true;
@@ -83,16 +95,24 @@ class KuisServices {
       'quis_id': quisId,
       'kelas_id': kelasId,
       'kategori_id': kategoriId,
-      'jawaban': jawaban.map(
-        (key, value) => MapEntry(key.toString(), value),
-      ),
+      'jawaban': jawaban.map((key, value) => MapEntry(key.toString(), value)),
     };
 
-    final response = await http.post(
-      uri,
-      headers: await _headers(),
-      body: jsonEncode(body),
-    );
+    late http.Response response;
+
+    try {
+      response = await http
+          .post(uri, headers: await _headers(), body: jsonEncode(body))
+          .timeout(const Duration(seconds: 20));
+    } on TimeoutException {
+      throw Exception(
+        'Kuis memerlukan koneksi internet. Koneksi ke server terlalu lama.',
+      );
+    } on http.ClientException {
+      throw Exception(
+        'Kuis memerlukan koneksi internet. Periksa jaringan lalu coba lagi.',
+      );
+    }
 
     final data = _decodeResponse(response);
 
@@ -109,6 +129,28 @@ class KuisServices {
     throw Exception(data['message'] ?? 'Gagal mengirim jawaban kuis.');
   }
 
+  // Mengambil riwayat yang tersimpan di perangkat (tanpa internet).
+  Future<List<Map<String, dynamic>>?> getRiwayatKuisLocal() async {
+    final cacheKey = await AuthServices.getRiwayatCacheKey();
+    if (cacheKey == null) return null;
+
+    final prefs = await SharedPreferences.getInstance();
+    final dataLokal = prefs.getString(cacheKey);
+    if (dataLokal == null || dataLokal.isEmpty) return null;
+
+    try {
+      final decoded = jsonDecode(dataLokal);
+
+      if (decoded is List) {
+        return decoded.map((item) => Map<String, dynamic>.from(item)).toList();
+      }
+    } catch (_) {
+      // Cache rusak atau format tidak sesuai.
+    }
+
+    return null;
+  }
+
   // Mengambil riwayat dari server atau penyimpanan lokal.
   Future<List<Map<String, dynamic>>> getRiwayatKuis() async {
     final cacheKey = await AuthServices.getRiwayatCacheKey();
@@ -118,15 +160,13 @@ class KuisServices {
     }
 
     final prefs = await SharedPreferences.getInstance();
+    final localData = await getRiwayatKuisLocal();
 
     try {
       final uri = Uri.parse('$baseUrl/siswa/hasil-kuis');
 
       final response = await http
-          .get(
-            uri,
-            headers: await _headers(),
-          )
+          .get(uri, headers: await _headers())
           .timeout(const Duration(seconds: 12));
 
       final data = _decodeResponse(response);
@@ -147,21 +187,7 @@ class KuisServices {
       throw Exception('Tidak berhasil mengambil data terbaru.');
     } catch (_) {
       // Jika server tidak dapat dihubungi, gunakan data lokal.
-      final dataLokal = prefs.getString(cacheKey);
-
-      if (dataLokal != null) {
-        try {
-          final decoded = jsonDecode(dataLokal);
-
-          if (decoded is List) {
-            return decoded
-                .map((item) => Map<String, dynamic>.from(item))
-                .toList();
-          }
-        } catch (_) {
-          // Cache rusak atau format tidak sesuai.
-        }
-      }
+      if (localData != null) return localData;
 
       throw Exception(
         'Riwayat reward belum tersedia di perangkat ini. '

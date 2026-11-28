@@ -49,10 +49,17 @@ class KategoriService {
         );
       }
       if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw KategoriServiceException(
+        final error = KategoriServiceException(
           _responseMessage(response.body) ??
               'Gagal mengambil kategori (HTTP ${response.statusCode}).',
         );
+
+        // Gunakan cache saat server bermasalah agar halaman tetap bisa dibuka.
+        if (response.statusCode >= 500) {
+          return await _fallbackOrThrow(kelasId, error.message);
+        }
+
+        throw error;
       }
       if (response.statusCode == 204 || response.body.trim().isEmpty) {
         await _saveCache(kelasId, const []);
@@ -69,8 +76,8 @@ class KategoriService {
       final rawList = decoded is List
           ? decoded
           : decoded is Map<String, dynamic>
-              ? (decoded['kategori'] ?? decoded['data'])
-              : null;
+          ? (decoded['kategori'] ?? decoded['data'])
+          : null;
 
       if (rawList is! List) {
         throw const FormatException(

@@ -4,8 +4,6 @@ class KelasModel {
   final int id;
   final String namaKelas;
 
-  int get kelasId => id;
-
   factory KelasModel.fromMap(Map<String, dynamic> map) {
     final rawId = map['id'];
     final id = rawId is int ? rawId : int.tryParse('$rawId');

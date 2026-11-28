@@ -14,10 +14,8 @@ class MateriModel {
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
-  // Backward compatibility getters
+  // Backward compatibility getter
   String? get gambarUrl => gambarUrls.isNotEmpty ? gambarUrls.first : null;
-  String? get gambar => gambarUrl;
-  String? get audio => audioUrl;
 
   const MateriModel({
     required this.id,
@@ -102,10 +100,46 @@ class MateriModel {
     return [];
   }
 
+  // Mendeteksi path file lokal (hasil cache offline), bukan URL server.
+  static bool isLocalMediaPath(String path) {
+    final value = path.trim();
+    if (value.isEmpty) return false;
+    if (value.startsWith('file://')) return true;
+    if (RegExp(r'^[a-zA-Z]:[\\/]').hasMatch(value)) return true;
+
+    // Path penyimpanan aplikasi di Android, iOS, dan desktop.
+    const localRoots = [
+      '/data/',
+      '/storage/emulated/',
+      '/var/mobile/',
+      '/private/var/',
+      '/home/',
+      '/Users/',
+      '/tmp/',
+    ];
+
+    return localRoots.any(value.startsWith);
+  }
+
+  // Mengubah URI file lokal menjadi path yang bisa dibaca File/audioplayer.
+  static String localFilePath(String path) {
+    final value = path.trim();
+    if (!value.startsWith('file://')) return value;
+
+    try {
+      return Uri.parse(value).toFilePath();
+    } catch (_) {
+      return value;
+    }
+  }
+
   // Helper untuk membersihkan / menormalkan sebuah URL media agar sesuai dengan host server
   static String? buildMediaUrl(String path, {String? baseUrl}) {
     final trimmed = path.trim();
     if (trimmed.isEmpty || trimmed == 'null') return null;
+
+    // Jangan ubah path file lokal hasil cache offline menjadi URL server.
+    if (isLocalMediaPath(trimmed)) return trimmed;
 
     final effectiveBaseUrl = baseUrl ?? AuthServices.baseUrl;
     final root = Uri.tryParse(effectiveBaseUrl);
@@ -118,10 +152,7 @@ class MateriModel {
       final host = uri.host.toLowerCase();
       if (host == '127.0.0.1' || host == 'localhost' || host == '0.0.0.0') {
         return uri
-            .replace(
-              host: root.host,
-              port: root.hasPort ? root.port : null,
-            )
+            .replace(host: root.host, port: root.hasPort ? root.port : null)
             .toString();
       }
       return trimmed;
@@ -173,35 +204,6 @@ class MateriModel {
       updatedAt: json['updated_at'] != null
           ? DateTime.tryParse(json['updated_at'].toString())
           : null,
-    );
-  }
-
-  // Salinan objek dengan perubahan data tertentu
-  MateriModel copyWith({
-    int? id,
-    String? kodeMateri,
-    String? namaMateri,
-    String? isiMateri,
-    List<String>? gambarUrls,
-    String? gambarUrl,
-    String? audioUrl,
-    int? kategoriId,
-    int? kelasId,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) {
-    return MateriModel(
-      id: id ?? this.id,
-      kodeMateri: kodeMateri ?? this.kodeMateri,
-      namaMateri: namaMateri ?? this.namaMateri,
-      isiMateri: isiMateri ?? this.isiMateri,
-      gambarUrls:
-          gambarUrls ?? (gambarUrl != null ? [gambarUrl] : this.gambarUrls),
-      audioUrl: audioUrl ?? this.audioUrl,
-      kategoriId: kategoriId ?? this.kategoriId,
-      kelasId: kelasId ?? this.kelasId,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 

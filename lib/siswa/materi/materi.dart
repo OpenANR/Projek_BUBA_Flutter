@@ -1,10 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../../models/materi_model.dart';
 import '../../services/audio_player/app_audio_player.dart';
 import '../../services/materi_services.dart';
-
-typedef MateriPage = MateriDetailPage;
 
 class MateriDetailPage extends StatefulWidget {
   final String kodeMateri;
@@ -77,17 +77,13 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
     if (!mounted) return;
 
     setState(() {
-      _loading =
-          _materi == null ||
-          (_materi?.isiMateri.isEmpty ?? true);
+      _loading = _materi == null || (_materi?.isiMateri.isEmpty ?? true);
 
       _error = null;
     });
 
     try {
-      final detail = await _services.getDetailMateri(
-        _currentKodeMateri,
-      );
+      final detail = await _services.getDetailMateri(_currentKodeMateri);
 
       if (!mounted) return;
 
@@ -100,8 +96,7 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
 
       // Jika data awal dari list masih tersedia,
       // tetap tampilkan data tersebut.
-      if (_materi != null &&
-          _materi!.namaMateri.isNotEmpty) {
+      if (_materi != null && _materi!.namaMateri.isNotEmpty) {
         setState(() {
           _loading = false;
         });
@@ -120,9 +115,7 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
     if (audioUrl == null || audioUrl.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Audio untuk materi ini belum tersedia.',
-          ),
+          content: Text('Audio untuk materi ini belum tersedia.'),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -141,9 +134,7 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
         });
       } else {
         await _audioPlayer.stop();
-        await _audioPlayer.play(
-          UrlSource(audioUrl),
-        );
+        await _audioPlayer.play(audioUrl);
 
         if (!mounted) return;
 
@@ -160,9 +151,7 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'Tidak dapat memutar audio: $e',
-          ),
+          content: Text('Tidak dapat memutar audio: $e'),
           backgroundColor: Colors.redAccent,
           behavior: SnackBarBehavior.floating,
         ),
@@ -179,13 +168,11 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
 
     _audioPlayer.stop();
 
-    final targetMateri =
-        widget.daftarMateri![newIndex];
+    final targetMateri = widget.daftarMateri![newIndex];
 
     setState(() {
       _currentIndex = newIndex;
-      _currentKodeMateri =
-          targetMateri.kodeMateri;
+      _currentKodeMateri = targetMateri.kodeMateri;
       _materi = targetMateri;
       _isPlayingAudio = false;
     });
@@ -195,8 +182,7 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
 
   Widget _buildHeader() {
     return Padding(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -211,22 +197,13 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
           ),
 
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 56),
+            padding: const EdgeInsets.symmetric(horizontal: 56),
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
               decoration: BoxDecoration(
                 color: _blue,
-                borderRadius:
-                    BorderRadius.circular(30),
-                border: Border.all(
-                  color: Colors.white,
-                  width: 3.5,
-                ),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: Colors.white, width: 3.5),
                 boxShadow: const [
                   BoxShadow(
                     color: Color(0x33000000),
@@ -256,20 +233,16 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth =
-        MediaQuery.sizeOf(context).width;
+    final screenWidth = MediaQuery.sizeOf(context).width;
 
-    final horizontalPadding =
-        screenWidth >= 700 ? 28.0 : 16.0;
+    final horizontalPadding = screenWidth >= 700 ? 28.0 : 16.0;
 
     return PopScope(
-      onPopInvokedWithResult:
-          (didPop, result) {
+      onPopInvokedWithResult: (didPop, result) {
         _audioPlayer.stop();
       },
       child: Scaffold(
-        backgroundColor:
-            const Color(0xFFFFF8EE),
+        backgroundColor: const Color(0xFFFFF8EE),
         body: Stack(
           fit: StackFit.expand,
           children: [
@@ -279,11 +252,8 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
               height: double.infinity,
               fit: BoxFit.cover,
               alignment: Alignment.center,
-              errorBuilder:
-                  (context, error, stackTrace) {
-                return const ColoredBox(
-                  color: Color(0xFF5CB8E4),
-                );
+              errorBuilder: (context, error, stackTrace) {
+                return const ColoredBox(color: Color(0xFF5CB8E4));
               },
             ),
 
@@ -299,12 +269,9 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
                   Expanded(
                     child: _loading
                         ? _buildLoading()
-                        : _error != null &&
-                                _materi == null
-                            ? _buildError()
-                            : _buildContent(
-                                horizontalPadding,
-                              ),
+                        : _error != null && _materi == null
+                        ? _buildError()
+                        : _buildContent(horizontalPadding),
                   ),
                 ],
               ),
@@ -315,48 +282,31 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
     );
   }
 
-  Widget _buildContent(
-    double horizontalPadding,
-  ) {
+  Widget _buildContent(double horizontalPadding) {
     final materi = _materi!;
 
     final daftar = widget.daftarMateri;
 
-    final hasList =
-        daftar != null && daftar.isNotEmpty;
+    final hasList = daftar != null && daftar.isNotEmpty;
 
-    final hasPrev =
-        hasList && _currentIndex > 0;
+    final hasPrev = hasList && _currentIndex > 0;
 
-    final hasNext =
-        hasList &&
-        _currentIndex < daftar.length - 1;
+    final hasNext = hasList && _currentIndex < daftar.length - 1;
 
     return SingleChildScrollView(
-      physics:
-          const BouncingScrollPhysics(),
-      padding: EdgeInsets.fromLTRB(
-        horizontalPadding,
-        8,
-        horizontalPadding,
-        30,
-      ),
+      physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.fromLTRB(horizontalPadding, 8, horizontalPadding, 30),
       child: Center(
         child: ConstrainedBox(
-          constraints:
-              const BoxConstraints(
-            maxWidth: 850,
-          ),
+          constraints: const BoxConstraints(maxWidth: 850),
           child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildTitleCard(materi),
 
               const SizedBox(height: 16),
 
-              if (materi.audioUrl != null &&
-                  materi.audioUrl!.isNotEmpty) ...[
+              if (materi.audioUrl != null && materi.audioUrl!.isNotEmpty) ...[
                 _buildAudioPlayerCard(),
                 const SizedBox(height: 16),
               ],
@@ -371,9 +321,7 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
                 ),
               ] else if (materi.gambarUrl != null &&
                   materi.gambarUrl!.isNotEmpty) ...[
-                _buildImageCard(
-                  materi.gambarUrl!,
-                ),
+                _buildImageCard(materi.gambarUrl!),
                 const SizedBox(height: 16),
               ],
 
@@ -382,10 +330,7 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
               const SizedBox(height: 24),
 
               if (hasList)
-                _buildNavigationButtons(
-                  hasPrev: hasPrev,
-                  hasNext: hasNext,
-                )
+                _buildNavigationButtons(hasPrev: hasPrev, hasNext: hasNext)
               else
                 _buildBackButtonBottom(),
 
@@ -399,12 +344,7 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
                     color: Colors.white,
                     fontSize: 13,
                     fontWeight: FontWeight.w900,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black54,
-                        blurRadius: 4,
-                      ),
-                    ],
+                    shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
                   ),
                 ),
               ),
@@ -415,55 +355,40 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
     );
   }
 
-  Widget _buildTitleCard(
-    MateriModel materi,
-  ) {
+  Widget _buildTitleCard(MateriModel materi) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius:
-            BorderRadius.circular(24),
-        border: Border.all(
-          color: _green,
-          width: 3,
-        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _green, width: 3),
         boxShadow: [
           BoxShadow(
-            color:
-                Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: _green.withValues(
-                    alpha: 0.15,
-                  ),
-                  borderRadius:
-                      BorderRadius.circular(12),
+                  color: _green.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  materi.kodeMateri.isNotEmpty
-                      ? materi.kodeMateri
-                      : 'MATERI',
+                  materi.kodeMateri.isNotEmpty ? materi.kodeMateri : 'MATERI',
                   style: const TextStyle(
                     color: _green,
-                    fontWeight:
-                        FontWeight.bold,
+                    fontWeight: FontWeight.bold,
                     fontSize: 13,
                   ),
                 ),
@@ -471,40 +396,26 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
 
               const Spacer(),
 
-              if (widget.namaKelas.isNotEmpty ||
-                  widget.namaKategori.isNotEmpty)
+              if (widget.namaKelas.isNotEmpty || widget.namaKategori.isNotEmpty)
                 Flexible(
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(
+                    padding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: _blue.withValues(
-                        alpha: 0.12,
-                      ),
-                      borderRadius:
-                          BorderRadius.circular(
-                        12,
-                      ),
+                      color: _blue.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       [
-                        if (widget.namaKelas
-                            .isNotEmpty)
-                          widget.namaKelas,
-                        if (widget.namaKategori
-                            .isNotEmpty)
-                          widget.namaKategori,
+                        if (widget.namaKelas.isNotEmpty) widget.namaKelas,
+                        if (widget.namaKategori.isNotEmpty) widget.namaKategori,
                       ].join(' • '),
-                      overflow:
-                          TextOverflow.ellipsis,
-                      style:
-                          const TextStyle(
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
                         color: _blue,
-                        fontWeight:
-                            FontWeight.w600,
+                        fontWeight: FontWeight.w600,
                         fontSize: 12,
                       ),
                     ),
@@ -531,40 +442,25 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
 
   Widget _buildAudioPlayerCard() {
     return Container(
-      padding:
-          const EdgeInsets.symmetric(
-        horizontal: 18,
-        vertical: 14,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
         color: _isPlayingAudio
             ? const Color(0xFFE8F5E9)
             : const Color(0xFFEFF6FF),
-        borderRadius:
-            BorderRadius.circular(20),
-        border: Border.all(
-          color: _isPlayingAudio
-              ? _green
-              : _blue,
-          width: 2.5,
-        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _isPlayingAudio ? _green : _blue, width: 2.5),
       ),
       child: Row(
         children: [
           Material(
-            color: _isPlayingAudio
-                ? _green
-                : _blue,
-            shape:
-                const CircleBorder(),
+            color: _isPlayingAudio ? _green : _blue,
+            shape: const CircleBorder(),
             elevation: 3,
             child: InkWell(
-              customBorder:
-                  const CircleBorder(),
+              customBorder: const CircleBorder(),
               onTap: _toggleAudio,
               child: const Padding(
-                padding:
-                    EdgeInsets.all(12),
+                padding: EdgeInsets.all(12),
                 child: Icon(
                   Icons.volume_up_rounded,
                   color: Colors.white,
@@ -578,8 +474,7 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
 
           Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   _isPlayingAudio
@@ -587,14 +482,9 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
                       : 'Dengarkan Penjelasan 🔊',
                   style: TextStyle(
                     color: _isPlayingAudio
-                        ? const Color(
-                            0xFF1B5E20,
-                          )
-                        : const Color(
-                            0xFF0D47A1,
-                          ),
-                    fontWeight:
-                        FontWeight.bold,
+                        ? const Color(0xFF1B5E20)
+                        : const Color(0xFF0D47A1),
+                    fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
                 ),
@@ -605,11 +495,7 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
                   _isPlayingAudio
                       ? 'Ketuk tombol untuk menjeda suara narasi'
                       : 'Ketuk tombol untuk mendengarkan materi',
-                  style:
-                      const TextStyle(
-                    color: Colors.black54,
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(color: Colors.black54, fontSize: 12),
                 ),
               ],
             ),
@@ -619,136 +505,107 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
     );
   }
 
-  Widget _buildImageCard(
-    String imageUrl,
-  ) {
+  Widget _buildImageCard(String imageUrl) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius:
-            BorderRadius.circular(24),
-        border: Border.all(
-          color: Colors.white,
-          width: 4,
-        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white, width: 4),
         boxShadow: [
           BoxShadow(
-            color:
-                Colors.black.withValues(
-              alpha: 0.15,
-            ),
+            color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius:
-            BorderRadius.circular(20),
-        child: Image.network(
-          imageUrl,
-          fit: BoxFit.contain,
-          webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Container(
-              height: 220,
-              alignment: Alignment.center,
-              child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                        (loadingProgress.expectedTotalBytes ?? 1)
-                    : null,
-                color: _green,
-              ),
-            );
-          },
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              height: 180,
-              color:
-                  Colors.grey.shade100,
-              alignment:
-                  Alignment.center,
-              child: Column(
-                mainAxisAlignment:
-                    MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons
-                        .image_not_supported_rounded,
-                    size: 48,
-                    color:
-                        Colors.grey.shade400,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Gambar tidak dapat dimuat',
-                    style: TextStyle(
-                      color:
-                          Colors.grey.shade600,
-                      fontSize: 13,
+        borderRadius: BorderRadius.circular(20),
+        child: MateriModel.isLocalMediaPath(imageUrl)
+            ? Image.file(
+                File(MateriModel.localFilePath(imageUrl)),
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) =>
+                    _buildImageError(),
+              )
+            : Image.network(
+                imageUrl,
+                fit: BoxFit.contain,
+                webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    height: 220,
+                    alignment: Alignment.center,
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                                (loadingProgress.expectedTotalBytes ?? 1)
+                          : null,
+                      color: _green,
                     ),
-                  ),
-                ],
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) =>
+                    _buildImageError(),
               ),
-            );
-          },
-        ),
       ),
     );
   }
 
-  Widget _buildTextCard(
-    MateriModel materi,
-  ) {
-    final isi =
-        materi.isiMateri.trim();
+  Widget _buildImageError() {
+    return Container(
+      height: 180,
+      color: Colors.grey.shade100,
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.image_not_supported_rounded,
+            size: 48,
+            color: Colors.grey.shade400,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Gambar tidak dapat dimuat',
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextCard(MateriModel materi) {
+    final isi = materi.isiMateri.trim();
 
     return Container(
-      padding:
-          const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius:
-            BorderRadius.circular(24),
-        border: Border.all(
-          color:
-              const Color(0xFFF0E5D8),
-          width: 2,
-        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFF0E5D8), width: 2),
         boxShadow: [
           BoxShadow(
-            color:
-                Colors.black.withValues(
-              alpha: 0.08,
-            ),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 8,
-            offset:
-                const Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Row(
             children: [
-              Text(
-                '📖',
-                style:
-                    TextStyle(fontSize: 22),
-              ),
+              Text('📖', style: TextStyle(fontSize: 22)),
               SizedBox(width: 8),
               Text(
                 'Isi Pembelajaran',
                 style: TextStyle(
                   fontSize: 17,
-                  fontWeight:
-                      FontWeight.bold,
-                  color:
-                      Color(0xFF1E3A2F),
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1E3A2F),
                 ),
               ),
             ],
@@ -756,11 +613,7 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
 
           const SizedBox(height: 14),
 
-          const Divider(
-            color:
-                Color(0xFFEEEEEE),
-            thickness: 1,
-          ),
+          const Divider(color: Color(0xFFEEEEEE), thickness: 1),
 
           const SizedBox(height: 14),
 
@@ -771,10 +624,8 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
             style: const TextStyle(
               fontSize: 17,
               height: 1.7,
-              color:
-                  Color(0xFF333333),
-              fontWeight:
-                  FontWeight.w500,
+              color: Color(0xFF333333),
+              fontWeight: FontWeight.w500,
               letterSpacing: 0.3,
             ),
           ),
@@ -792,111 +643,51 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
         Expanded(
           child: hasPrev
               ? ElevatedButton.icon(
-                  onPressed: () =>
-                      _pindahMateri(
-                    _currentIndex - 1,
-                  ),
-                  icon: const Icon(
-                    Icons.arrow_back_rounded,
-                  ),
-                  label: const Text(
-                    'Sebelumnya',
-                  ),
-                  style:
-                      ElevatedButton.styleFrom(
-                    backgroundColor:
-                        _blue,
-                    foregroundColor:
-                        Colors.white,
-                    padding:
-                        const EdgeInsets
-                            .symmetric(
-                      vertical: 14,
-                    ),
-                    shape:
-                        RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius
-                              .circular(
-                        16,
-                      ),
+                  onPressed: () => _pindahMateri(_currentIndex - 1),
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  label: const Text('Sebelumnya'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _blue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
                 )
               : OutlinedButton.icon(
                   onPressed: () {
                     _audioPlayer.stop();
-                    Navigator.maybePop(
-                      context,
-                    );
+                    Navigator.maybePop(context);
                   },
-                  icon: const Icon(
-                    Icons.list_alt_rounded,
-                  ),
-                  label: const Text(
-                    'Daftar Materi',
-                  ),
-                  style:
-                      OutlinedButton.styleFrom(
-                    backgroundColor:
-                        Colors.white,
-                    foregroundColor:
-                        _blue,
-                    padding:
-                        const EdgeInsets
-                            .symmetric(
-                      vertical: 14,
-                    ),
-                    side:
-                        const BorderSide(
-                      color: _blue,
-                      width: 2,
-                    ),
-                    shape:
-                        RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius
-                              .circular(
-                        16,
-                      ),
+                  icon: const Icon(Icons.list_alt_rounded),
+                  label: const Text('Daftar Materi'),
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: _blue,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: const BorderSide(color: _blue, width: 2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
                 ),
         ),
 
-        if (hasNext || hasPrev)
-          const SizedBox(width: 14),
+        if (hasNext || hasPrev) const SizedBox(width: 14),
 
         if (hasNext)
           Expanded(
             child: ElevatedButton.icon(
-              onPressed: () =>
-                  _pindahMateri(
-                _currentIndex + 1,
-              ),
-              icon: const Icon(
-                Icons.arrow_forward_rounded,
-              ),
-              label: const Text(
-                'Selanjutnya',
-              ),
-              style:
-                  ElevatedButton.styleFrom(
-                backgroundColor:
-                    _green,
-                foregroundColor:
-                    Colors.white,
-                padding:
-                    const EdgeInsets
-                        .symmetric(
-                  vertical: 14,
-                ),
-                shape:
-                    RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(
-                    16,
-                  ),
+              onPressed: () => _pindahMateri(_currentIndex + 1),
+              icon: const Icon(Icons.arrow_forward_rounded),
+              label: const Text('Selanjutnya'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _green,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
               ),
             ),
@@ -906,33 +697,16 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
             child: ElevatedButton.icon(
               onPressed: () {
                 _audioPlayer.stop();
-                Navigator.maybePop(
-                  context,
-                );
+                Navigator.maybePop(context);
               },
-              icon: const Icon(
-                Icons.check_circle_rounded,
-              ),
-              label: const Text(
-                'Selesai',
-              ),
-              style:
-                  ElevatedButton.styleFrom(
-                backgroundColor:
-                    _orange,
-                foregroundColor:
-                    Colors.white,
-                padding:
-                    const EdgeInsets
-                        .symmetric(
-                  vertical: 14,
-                ),
-                shape:
-                    RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(
-                    16,
-                  ),
+              icon: const Icon(Icons.check_circle_rounded),
+              label: const Text('Selesai'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _orange,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
               ),
             ),
@@ -947,32 +721,16 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
       child: ElevatedButton.icon(
         onPressed: () {
           _audioPlayer.stop();
-          Navigator.maybePop(
-            context,
-          );
+          Navigator.maybePop(context);
         },
-        icon: const Icon(
-          Icons.arrow_back_rounded,
-        ),
-        label: const Text(
-          'Kembali ke Daftar Materi',
-        ),
-        style:
-            ElevatedButton.styleFrom(
-          backgroundColor:
-              _blue,
-          foregroundColor:
-              Colors.white,
-          padding:
-              const EdgeInsets.symmetric(
-            vertical: 14,
-          ),
-          shape:
-              RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(
-              16,
-            ),
+        icon: const Icon(Icons.arrow_back_rounded),
+        label: const Text('Kembali ke Daftar Materi'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _blue,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
         ),
       ),
@@ -982,19 +740,15 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
   Widget _buildLoading() {
     return const Center(
       child: Column(
-        mainAxisAlignment:
-            MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(
-            color: _green,
-          ),
+          CircularProgressIndicator(color: _green),
           SizedBox(height: 16),
           Text(
             'Sedang menyiapkan materi...',
             style: TextStyle(
               color: _blue,
-              fontWeight:
-                  FontWeight.bold,
+              fontWeight: FontWeight.bold,
               fontSize: 16,
             ),
           ),
@@ -1006,24 +760,15 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
   Widget _buildError() {
     return Center(
       child: Container(
-        margin:
-            const EdgeInsets.all(24),
-        padding:
-            const EdgeInsets.all(24),
+        margin: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius:
-              BorderRadius.circular(
-            24,
-          ),
-          border: Border.all(
-            color: Colors.redAccent,
-            width: 2.5,
-          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.redAccent, width: 2.5),
         ),
         child: Column(
-          mainAxisSize:
-              MainAxisSize.min,
+          mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(
               Icons.error_outline_rounded,
@@ -1038,46 +783,29 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
               style: TextStyle(
                 color: Colors.redAccent,
                 fontSize: 18,
-                fontWeight:
-                    FontWeight.bold,
+                fontWeight: FontWeight.bold,
               ),
             ),
 
             const SizedBox(height: 8),
 
             Text(
-              _error ??
-                  'Terjadi kesalahan.',
-              textAlign:
-                  TextAlign.center,
-              style:
-                  const TextStyle(
-                color: Colors.grey,
-              ),
+              _error ?? 'Terjadi kesalahan.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.grey),
             ),
 
             const SizedBox(height: 18),
 
             ElevatedButton.icon(
-              onPressed:
-                  _loadDetail,
-              icon: const Icon(
-                Icons.refresh_rounded,
-              ),
-              label:
-                  const Text('COBA LAGI'),
-              style:
-                  ElevatedButton.styleFrom(
-                backgroundColor:
-                    _blue,
-                foregroundColor:
-                    Colors.white,
-                shape:
-                    RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(
-                    14,
-                  ),
+              onPressed: _loadDetail,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('COBA LAGI'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _blue,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
             ),
@@ -1089,9 +817,7 @@ class _MateriDetailPageState extends State<MateriDetailPage> {
 }
 
 class _BackButton extends StatelessWidget {
-  const _BackButton({
-    required this.onPressed,
-  });
+  const _BackButton({required this.onPressed});
 
   final VoidCallback onPressed;
 
@@ -1100,18 +826,13 @@ class _BackButton extends StatelessWidget {
     return Material(
       color: const Color(0xFF5EBEF3),
       shape: const CircleBorder(
-        side: BorderSide(
-          color: Colors.white,
-          width: 3,
-        ),
+        side: BorderSide(color: Colors.white, width: 3),
       ),
       child: InkWell(
-        customBorder:
-            const CircleBorder(),
+        customBorder: const CircleBorder(),
         onTap: onPressed,
         child: const Padding(
-          padding:
-              EdgeInsets.all(9),
+          padding: EdgeInsets.all(9),
           child: Icon(
             Icons.arrow_back_ios_new_rounded,
             color: Colors.white,

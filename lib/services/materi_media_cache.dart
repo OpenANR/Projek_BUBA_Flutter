@@ -9,16 +9,12 @@ class MateriMediaCache {
   // ==========================================================
 
   static Future<Directory> _getMateriDirectory() async {
-    final directory =
-        await getApplicationDocumentsDirectory();
+    final directory = await getApplicationDocumentsDirectory();
 
-    final materiDirectory =
-        Directory('${directory.path}/materi');
+    final materiDirectory = Directory('${directory.path}/materi');
 
     if (!await materiDirectory.exists()) {
-      await materiDirectory.create(
-        recursive: true,
-      );
+      await materiDirectory.create(recursive: true);
     }
 
     return materiDirectory;
@@ -28,27 +24,34 @@ class MateriMediaCache {
   // MEMBUAT NAMA FILE
   // ==========================================================
 
+  static int _stableHash(String value) {
+    var hash = 0x811c9dc5;
+    for (final code in value.codeUnits) {
+      hash ^= code;
+      hash = (hash * 0x01000193) & 0xFFFFFFFF;
+    }
+    return hash;
+  }
+
   static String _fileNameFromUrl(String url) {
     try {
       final uri = Uri.parse(url);
 
-      String fileName =
-          uri.pathSegments.isNotEmpty
-              ? uri.pathSegments.last
-              : '';
+      String fileName = uri.pathSegments.isNotEmpty
+          ? uri.pathSegments.last
+          : '';
 
       if (fileName.isEmpty) {
-        fileName = 'media_${url.hashCode}';
+        fileName = 'media_${_stableHash(url)}';
       }
 
-      fileName = fileName.replaceAll(
-        RegExp(r'[^a-zA-Z0-9._-]'),
-        '_',
-      );
+      fileName = fileName.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
 
-      return fileName;
+      // Sertakan hash URL agar file dengan nama sama dari folder berbeda
+      // tidak saling menimpa.
+      return '${_stableHash(url).toRadixString(16)}_$fileName';
     } catch (_) {
-      return 'media_${url.hashCode}';
+      return 'media_${_stableHash(url)}';
     }
   }
 
@@ -56,93 +59,49 @@ class MateriMediaCache {
   // DOWNLOAD FILE DARI SERVER
   // ==========================================================
 
-  static Future<String?> downloadFile(
-    String? url,
-  ) async {
+  static Future<String?> downloadFile(String? url) async {
     if (url == null || url.trim().isEmpty) {
       return null;
     }
 
     try {
-      final directory =
-          await _getMateriDirectory();
+      final directory = await _getMateriDirectory();
 
-      final fileName =
-          _fileNameFromUrl(url);
+      final fileName = _fileNameFromUrl(url);
 
-      final file =
-          File('${directory.path}/$fileName');
+      final file = File('${directory.path}/$fileName');
 
       // Jika sudah pernah didownload,
       // tidak perlu download lagi.
       if (await file.exists()) {
-        print(
-          'Media sudah tersedia: ${file.path}',
-        );
+        print('Media sudah tersedia: ${file.path}');
 
         return file.path;
       }
 
-      print(
-        'Mendownload media: $url',
-      );
+      print('Mendownload media: $url');
 
       final response = await http
           .get(Uri.parse(url))
-          .timeout(
-            const Duration(seconds: 15),
-          );
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
-        await file.writeAsBytes(
-          response.bodyBytes,
-          flush: true,
-        );
+        await file.writeAsBytes(response.bodyBytes, flush: true);
 
-        print(
-          'Media berhasil disimpan:',
-        );
+        print('Media berhasil disimpan:');
         print(file.path);
 
         return file.path;
       }
 
-      print(
-        'Gagal download media.',
-      );
-      print(
-        'Status: ${response.statusCode}',
-      );
+      print('Gagal download media.');
+      print('Status: ${response.statusCode}');
 
       return null;
     } catch (e) {
-      print(
-        'Error download media: $e',
-      );
+      print('Error download media: $e');
 
       return null;
     }
-  }
-
-  // ==========================================================
-  // CEK FILE LOKAL
-  // ==========================================================
-
-  static Future<String?> getLocalFile(
-    String? localPath,
-  ) async {
-    if (localPath == null ||
-        localPath.trim().isEmpty) {
-      return null;
-    }
-
-    final file =
-        File(localPath);
-
-    if (await file.exists()) {
-      return file.path;
-    }
-
-    return null;
   }
 }

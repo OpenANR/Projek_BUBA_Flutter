@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../services/kuis_services.dart';
 
 class RiwayatKuisPage extends StatefulWidget {
@@ -34,6 +35,18 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
       pesanError = null;
     });
 
+    // Tampilkan data lokal lebih dulu agar riwayat tetap bisa dibuka offline.
+    final localData = await _services.getRiwayatKuisLocal();
+
+    if (!mounted) return;
+
+    if (localData != null) {
+      setState(() {
+        daftarRiwayat = localData;
+        isLoading = false;
+      });
+    }
+
     try {
       final data = await _services.getRiwayatKuis();
 
@@ -42,24 +55,24 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
       setState(() {
         daftarRiwayat = data;
         isLoading = false;
+        pesanError = null;
       });
     } catch (e) {
-    if (!mounted) return;
+      if (!mounted) return;
 
-    setState(() {
-      pesanError =
-          'Riwayat reward belum tersedia. '
-          'Silakan hubungkan perangkat ke internet terlebih dahulu.';
-      isLoading = false;
-    });
+      setState(() {
+        if (localData == null) {
+          pesanError =
+              'Riwayat reward belum tersedia. '
+              'Silakan hubungkan perangkat ke internet terlebih dahulu.';
+        }
+        isLoading = false;
+      });
+    }
   }
-}
 
   // MENGAMBIL DATA RELASI DARI API
-  Map<String, dynamic> ambilMap(
-    Map<String, dynamic> data,
-    String key,
-  ) {
+  Map<String, dynamic> ambilMap(Map<String, dynamic> data, String key) {
     final value = data[key];
 
     if (value is Map) {
@@ -69,10 +82,7 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
     return {};
   }
 
-  dynamic ambilNilai(
-    Map<String, dynamic> data,
-    List<String> keys,
-  ) {
+  dynamic ambilNilai(Map<String, dynamic> data, List<String> keys) {
     for (final key in keys) {
       if (data[key] != null) {
         return data[key];
@@ -107,8 +117,7 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
     final quis = ambilMap(item, 'quis');
     final kategori = ambilMap(quis, 'kategori');
 
-    return (item['nama_kategori'] ?? kategori['nama_kategori'])
-            ?.toString() ??
+    return (item['nama_kategori'] ?? kategori['nama_kategori'])?.toString() ??
         'Kategori tidak tersedia';
   }
 
@@ -170,24 +179,16 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
         children: [
           Align(
             alignment: Alignment.centerLeft,
-            child: _BackButton(
-              onPressed: () => Navigator.maybePop(context),
-            ),
+            child: _BackButton(onPressed: () => Navigator.maybePop(context)),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 56),
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
               decoration: BoxDecoration(
                 color: const Color(0xFF1E60BE),
                 borderRadius: BorderRadius.circular(30),
-                border: Border.all(
-                  color: Colors.white,
-                  width: 3.5,
-                ),
+                border: Border.all(color: Colors.white, width: 3.5),
                 boxShadow: const [
                   BoxShadow(
                     color: Color(0x33000000),
@@ -217,79 +218,76 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
 
   // KARTU RINGKASAN
   Widget kartuRingkasan({
-  required String emoji,
-  required int nilai,
-  required String judul,
-  required Color warnaLatar,
-  required Color warnaTeks,
-}) {
-  return LayoutBuilder(
-    builder: (context, constraints) {
-      final compact = constraints.maxWidth < 150;
+    required String emoji,
+    required int nilai,
+    required String judul,
+    required Color warnaLatar,
+    required Color warnaTeks,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 150;
 
-      return Container(
-        width: double.infinity,
-        padding: EdgeInsets.symmetric(
-          horizontal: 6,
-          vertical: compact ? 8 : 12,
-        ),
-        decoration: BoxDecoration(
-          color: warnaLatar,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: Colors.white,
-            width: 3,
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(
+            horizontal: 6,
+            vertical: compact ? 8 : 12,
           ),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 5,
-              offset: Offset(2, 3),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                emoji,
-                style: TextStyle(fontSize: compact ? 23 : 30),
+          decoration: BoxDecoration(
+            color: warnaLatar,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.white, width: 3),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 5,
+                offset: Offset(2, 3),
               ),
-            ),
-            const SizedBox(height: 4),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                '$nilai',
-                style: TextStyle(
-                  fontSize: compact ? 19 : 23,
-                  fontWeight: FontWeight.w900,
-                  color: warnaTeks,
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  emoji,
+                  style: TextStyle(fontSize: compact ? 23 : 30),
                 ),
               ),
-            ),
-            const SizedBox(height: 3),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                judul,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: compact ? 9 : 11,
-                  fontWeight: FontWeight.bold,
-                  color: warnaTeks,
+              const SizedBox(height: 4),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  '$nilai',
+                  style: TextStyle(
+                    fontSize: compact ? 19 : 23,
+                    fontWeight: FontWeight.w900,
+                    color: warnaTeks,
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
+              const SizedBox(height: 3),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  judul,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: compact ? 9 : 11,
+                    fontWeight: FontWeight.bold,
+                    color: warnaTeks,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   // KARTU RIWAYAT
   Widget kartuRiwayat(Map<String, dynamic> reward) {
@@ -299,9 +297,7 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
     final bintang = angka(reward['jumlah_bintang']).clamp(0, 5);
 
     final tanggal = formatTanggal(
-      reward['created_at'] ??
-          reward['tanggal'] ??
-          reward['tanggal_pengerjaan'],
+      reward['created_at'] ?? reward['tanggal'] ?? reward['tanggal_pengerjaan'],
     );
 
     return LayoutBuilder(
@@ -313,10 +309,7 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
           decoration: BoxDecoration(
             color: const Color(0xFFF4F9FF),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Colors.white,
-              width: 3,
-            ),
+            border: Border.all(color: Colors.white, width: 3),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.07),
@@ -391,10 +384,7 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFF9E6),
                   borderRadius: BorderRadius.circular(13),
-                  border: Border.all(
-                    color: const Color(0xFFFDE68A),
-                    width: 2,
-                  ),
+                  border: Border.all(color: const Color(0xFFFDE68A), width: 2),
                 ),
                 child: Column(
                   children: [
@@ -411,10 +401,7 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
                       bintang > 0
                           ? List.generate(bintang, (_) => '⭐').join()
                           : '😢',
-                      style: const TextStyle(
-                        fontSize: 27,
-                        letterSpacing: 3,
-                      ),
+                      style: const TextStyle(fontSize: 27, letterSpacing: 3),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -466,17 +453,11 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
 
   Widget _tanggalChip(String tanggal) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -502,17 +483,11 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
     required Color warnaTeks,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        vertical: 12,
-        horizontal: 4,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
       decoration: BoxDecoration(
         color: warnaLatar,
         borderRadius: BorderRadius.circular(13),
-        border: Border.all(
-          color: Colors.white,
-          width: 2,
-        ),
+        border: Border.all(color: Colors.white, width: 2),
       ),
       child: Column(
         children: [
@@ -542,17 +517,11 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
   Widget tampilanKosong() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 15,
-        vertical: 35,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 35),
       decoration: BoxDecoration(
         color: const Color(0xFFF4F9FF),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: const Color(0xFF9BCDF1),
-          width: 2,
-        ),
+        border: Border.all(color: const Color(0xFF9BCDF1), width: 2),
       ),
       child: Column(
         children: [
@@ -593,24 +562,15 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
         backgroundColor: _green,
         foregroundColor: Colors.white,
         elevation: 5,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 25,
-          vertical: 13,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 13),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(30),
-          side: const BorderSide(
-            color: Colors.white,
-            width: 3,
-          ),
+          side: const BorderSide(color: Colors.white, width: 3),
         ),
       ),
       child: const Text(
         '🏠  Mulai Belajar',
-        style: TextStyle(
-          fontWeight: FontWeight.w900,
-          fontSize: 14,
-        ),
+        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
       ),
     );
   }
@@ -622,24 +582,15 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
         backgroundColor: _lightBlue,
         foregroundColor: Colors.white,
         elevation: 5,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 27,
-          vertical: 13,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 27, vertical: 13),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(30),
-          side: const BorderSide(
-            color: Colors.white,
-            width: 3,
-          ),
+          side: const BorderSide(color: Colors.white, width: 3),
         ),
       ),
       child: const Text(
         '🏠  Pilih Konten',
-        style: TextStyle(
-          fontWeight: FontWeight.w900,
-          fontSize: 14,
-        ),
+        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
       ),
     );
   }
@@ -654,10 +605,7 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.96),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(
-          color: Colors.white,
-          width: 5,
-        ),
+        border: Border.all(color: Colors.white, width: 5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.18),
@@ -669,10 +617,7 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
       child: Column(
         children: [
           const SizedBox(height: 5),
-          const Text(
-            '🏆',
-            style: TextStyle(fontSize: 57),
-          ),
+          const Text('🏆', style: TextStyle(fontSize: 57)),
           const SizedBox(height: 8),
           const Text(
             'PRESTASI BELAJARMU!',
@@ -698,43 +643,43 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
 
           // RINGKASAN RESPONSIF
           GridView.count(
-          crossAxisCount: columns,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: maxWidth >= 650 ? 1.15 : 0.85,
-          children: [
-            kartuRingkasan(
-              emoji: '📝',
-              nilai: totalKuis,
-              judul: 'Kuis Dikerjakan',
-              warnaLatar: const Color(0xFFEAF5FF),
-              warnaTeks: _blue,
-            ),
-            kartuRingkasan(
-              emoji: '⭐',
-              nilai: totalBintang,
-              judul: 'Total Bintang',
-              warnaLatar: const Color(0xFFFEF3C7),
-              warnaTeks: const Color(0xFFD97706),
-            ),
-            kartuRingkasan(
-              emoji: '🎁',
-              nilai: totalReward,
-              judul: 'Reward Diperoleh',
-              warnaLatar: const Color(0xFFDCFCE7),
-              warnaTeks: const Color(0xFF16A34A),
-            ),
-            kartuRingkasan(
-              emoji: '🌟',
-              nilai: rataRata,
-              judul: 'Rata-rata Nilai',
-              warnaLatar: const Color(0xFFF3E8FF),
-              warnaTeks: const Color(0xFF9333EA),
-            ),
-          ],
-        ),
+            crossAxisCount: columns,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: maxWidth >= 650 ? 1.15 : 0.85,
+            children: [
+              kartuRingkasan(
+                emoji: '📝',
+                nilai: totalKuis,
+                judul: 'Kuis Dikerjakan',
+                warnaLatar: const Color(0xFFEAF5FF),
+                warnaTeks: _blue,
+              ),
+              kartuRingkasan(
+                emoji: '⭐',
+                nilai: totalBintang,
+                judul: 'Total Bintang',
+                warnaLatar: const Color(0xFFFEF3C7),
+                warnaTeks: const Color(0xFFD97706),
+              ),
+              kartuRingkasan(
+                emoji: '🎁',
+                nilai: totalReward,
+                judul: 'Reward Diperoleh',
+                warnaLatar: const Color(0xFFDCFCE7),
+                warnaTeks: const Color(0xFF16A34A),
+              ),
+              kartuRingkasan(
+                emoji: '🌟',
+                nilai: rataRata,
+                judul: 'Rata-rata Nilai',
+                warnaLatar: const Color(0xFFF3E8FF),
+                warnaTeks: const Color(0xFF9333EA),
+              ),
+            ],
+          ),
 
           const SizedBox(height: 27),
 
@@ -761,10 +706,7 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFEAF5FF),
                   borderRadius: BorderRadius.circular(30),
-                  border: Border.all(
-                    color: Colors.white,
-                    width: 2,
-                  ),
+                  border: Border.all(color: Colors.white, width: 2),
                 ),
                 child: Text(
                   '$totalKuis Riwayat',
@@ -808,10 +750,7 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: Colors.redAccent,
-            width: 2,
-          ),
+          border: Border.all(color: Colors.redAccent, width: 2),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -824,19 +763,13 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
             const SizedBox(height: 12),
             const Text(
               'Gagal Memuat Riwayat',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: _blue,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold, color: _blue),
             ),
             const SizedBox(height: 8),
             Text(
               pesanError ?? 'Terjadi kesalahan.',
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.grey,
-                fontSize: 12,
-              ),
+              style: const TextStyle(color: Colors.grey, fontSize: 12),
             ),
             const SizedBox(height: 15),
             ElevatedButton(
@@ -871,9 +804,7 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
             fit: BoxFit.cover,
             alignment: Alignment.center,
             errorBuilder: (context, error, stackTrace) {
-              return const ColoredBox(
-                color: Color(0xFF5CB8E4),
-              );
+              return const ColoredBox(color: Color(0xFF5CB8E4));
             },
           ),
 
@@ -891,61 +822,58 @@ class _RiwayatKuisPageState extends State<RiwayatKuisPage> {
                 Expanded(
                   child: isLoading
                       ? const Center(
-                          child: CircularProgressIndicator(
-                            color: _blue,
-                          ),
+                          child: CircularProgressIndicator(color: _blue),
                         )
                       : pesanError != null
-                          ? _buildError()
-                          : RefreshIndicator(
-                              color: _blue,
-                              onRefresh: loadRiwayat,
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  return ListView(
-                                    physics:
-                                        const AlwaysScrollableScrollPhysics(),
-                                    padding: EdgeInsets.fromLTRB(
-                                      horizontalPadding,
-                                      12,
-                                      horizontalPadding,
-                                      25,
+                      ? _buildError()
+                      : RefreshIndicator(
+                          color: _blue,
+                          onRefresh: loadRiwayat,
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              return ListView(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                padding: EdgeInsets.fromLTRB(
+                                  horizontalPadding,
+                                  12,
+                                  horizontalPadding,
+                                  25,
+                                ),
+                                children: [
+                                  Center(
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        maxWidth: 950,
+                                      ),
+                                      child: _buildRiwayatContent(
+                                        constraints.maxWidth -
+                                            horizontalPadding * 2,
+                                      ),
                                     ),
-                                    children: [
-                                      Center(
-                                        child: ConstrainedBox(
-                                          constraints: const BoxConstraints(
-                                            maxWidth: 950,
+                                  ),
+                                  const SizedBox(height: 22),
+                                  const Center(
+                                    child: Text(
+                                      'BUBA • Belajar sambil bermain 🌈',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w900,
+                                        shadows: [
+                                          Shadow(
+                                            color: Colors.black54,
+                                            blurRadius: 4,
                                           ),
-                                          child: _buildRiwayatContent(
-                                            constraints.maxWidth -
-                                                horizontalPadding * 2,
-                                          ),
-                                        ),
+                                        ],
                                       ),
-                                      const SizedBox(height: 22),
-                                      const Center(
-                                        child: Text(
-                                          'BUBA • Belajar sambil bermain 🌈',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w900,
-                                            shadows: [
-                                              Shadow(
-                                                color: Colors.black54,
-                                                blurRadius: 4,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              ),
-                            ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
                 ),
               ],
             ),
@@ -967,10 +895,7 @@ class _BackButton extends StatelessWidget {
     return Material(
       color: const Color(0xFF5EBEF3),
       shape: const CircleBorder(
-        side: BorderSide(
-          color: Colors.white,
-          width: 3,
-        ),
+        side: BorderSide(color: Colors.white, width: 3),
       ),
       child: InkWell(
         customBorder: const CircleBorder(),

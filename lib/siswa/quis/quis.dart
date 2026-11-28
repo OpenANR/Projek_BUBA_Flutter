@@ -93,9 +93,7 @@ class _QuisPageState extends State<QuisPage> {
       });
 
       debugPrint('Error putar audio: $e');
-      tampilkanPesan(
-        'Audio tidak dapat diputar. Periksa URL audio.',
-      );
+      tampilkanPesan('Audio tidak dapat diputar. Periksa URL audio.');
     }
   }
 
@@ -119,10 +117,7 @@ class _QuisPageState extends State<QuisPage> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        SnackBar(
-          content: Text(pesan),
-          behavior: SnackBarBehavior.floating,
-        ),
+        SnackBar(content: Text(pesan), behavior: SnackBarBehavior.floating),
       );
   }
 
@@ -176,9 +171,7 @@ class _QuisPageState extends State<QuisPage> {
   // ================= VALIDASI JAWABAN =================
 
   bool semuaSoalSudahDijawab() {
-    return widget.daftarKuis.every(
-      (item) => jawabanSiswa.containsKey(item.id),
-    );
+    return widget.daftarKuis.every((item) => jawabanSiswa.containsKey(item.id));
   }
 
   int get jumlahBelumDijawab {
@@ -193,28 +186,19 @@ class _QuisPageState extends State<QuisPage> {
     if (isSubmitting) return;
 
     if (!semuaSoalSudahDijawab()) {
-      tampilkanPesan(
-        'Masih ada $jumlahBelumDijawab soal yang belum dijawab.',
-      );
+      tampilkanPesan('Masih ada $jumlahBelumDijawab soal yang belum dijawab.');
       return;
     }
 
     final lanjut = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(22),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         title: const Text(
           'Selesaikan Kuis?',
-          style: TextStyle(
-            color: _blue,
-            fontWeight: FontWeight.w900,
-          ),
+          style: TextStyle(color: _blue, fontWeight: FontWeight.w900),
         ),
-        content: const Text(
-          'Apakah kamu yakin ingin mengirim semua jawaban?',
-        ),
+        content: const Text('Apakah kamu yakin ingin mengirim semua jawaban?'),
         actions: [
           TextButton(
             onPressed: () {
@@ -222,10 +206,7 @@ class _QuisPageState extends State<QuisPage> {
             },
             child: const Text(
               'Periksa Lagi',
-              style: TextStyle(
-                color: _blue,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(color: _blue, fontWeight: FontWeight.bold),
             ),
           ),
           ElevatedButton(
@@ -271,8 +252,7 @@ class _QuisPageState extends State<QuisPage> {
     try {
       // Pastikan jawaban hanya berisi ID soal yang sedang dikerjakan.
       final Map<int, String> jawabanFinal = {
-        for (final item in widget.daftarKuis)
-          item.id: jawabanSiswa[item.id]!,
+        for (final item in widget.daftarKuis) item.id: jawabanSiswa[item.id]!,
       };
 
       debugPrint('QUIZ ID: ${widget.quisId}');
@@ -338,17 +318,11 @@ class _QuisPageState extends State<QuisPage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 56),
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
               decoration: BoxDecoration(
                 color: _blue,
                 borderRadius: BorderRadius.circular(30),
-                border: Border.all(
-                  color: Colors.white,
-                  width: 3.5,
-                ),
+                border: Border.all(color: Colors.white, width: 3.5),
                 boxShadow: const [
                   BoxShadow(
                     color: Color(0x33000000),
@@ -389,10 +363,7 @@ class _QuisPageState extends State<QuisPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: borderColor,
-          width: 3,
-        ),
+        border: Border.all(color: borderColor, width: 3),
         boxShadow: const [
           BoxShadow(
             color: Color(0x26000000),
@@ -420,11 +391,7 @@ class _QuisPageState extends State<QuisPage> {
         children: [
           Row(
             children: [
-              const Icon(
-                Icons.stars_rounded,
-                color: _green,
-                size: 24,
-              ),
+              const Icon(Icons.stars_rounded, color: _green, size: 24),
               const SizedBox(width: 8),
               const Expanded(
                 child: Text(
@@ -481,19 +448,11 @@ class _QuisPageState extends State<QuisPage> {
 
   // ================= LABEL =================
 
-  Widget _labelSection(
-    String text, {
-    IconData? icon,
-    Color color = _blue,
-  }) {
+  Widget _labelSection(String text, {IconData? icon, Color color = _blue}) {
     return Row(
       children: [
         if (icon != null) ...[
-          Icon(
-            icon,
-            color: color,
-            size: 21,
-          ),
+          Icon(icon, color: color, size: 21),
           const SizedBox(width: 8),
         ],
         Text(
@@ -512,7 +471,8 @@ class _QuisPageState extends State<QuisPage> {
   // ================= PERTANYAAN =================
 
   Widget kartuPertanyaan() {
-    final audioTersedia = soal.audioPertanyaanUrl != null &&
+    final audioTersedia =
+        soal.audioPertanyaanUrl != null &&
         soal.audioPertanyaanUrl!.trim().isNotEmpty;
 
     return _sectionCard(
@@ -550,10 +510,7 @@ class _QuisPageState extends State<QuisPage> {
             ],
           ),
           const SizedBox(height: 18),
-          _labelSection(
-            'PERTANYAAN',
-            icon: Icons.help_rounded,
-          ),
+          _labelSection('PERTANYAAN', icon: Icons.help_rounded),
           const SizedBox(height: 10),
           Text(
             soal.pertanyaan,
@@ -572,9 +529,7 @@ class _QuisPageState extends State<QuisPage> {
                 label: isPlayingAudio
                     ? 'PUTAR ULANG PERTANYAAN'
                     : 'DENGARKAN PERTANYAAN',
-                onPressed: () => putarAudio(
-                  soal.audioPertanyaanUrl,
-                ),
+                onPressed: () => putarAudio(soal.audioPertanyaanUrl),
               ),
             ),
           ],
@@ -606,83 +561,70 @@ class _QuisPageState extends State<QuisPage> {
             color: const Color(0xFFB66B00),
           ),
           const SizedBox(height: 12),
-          ...gambar.map(
-            (url) {
-              debugPrint('URL GAMBAR: $url');
+          ...gambar.map((url) {
+            debugPrint('URL GAMBAR: $url');
 
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  width: double.infinity,
+                  constraints: const BoxConstraints(
+                    minHeight: 100,
+                    maxHeight: 300,
+                  ),
+                  color: const Color(0xFFF5F8FC),
+                  child: Image.network(
+                    url,
+                    key: ValueKey('${soal.id}-$url'),
                     width: double.infinity,
-                    constraints: const BoxConstraints(
-                      minHeight: 100,
-                      maxHeight: 300,
-                    ),
-                    color: const Color(0xFFF5F8FC),
-                    child: Image.network(
-                      url,
-                      key: ValueKey('${soal.id}-$url'),
-                      width: double.infinity,
-                      fit: BoxFit.contain,
-                      webHtmlElementStrategy:
-                          WebHtmlElementStrategy.prefer,
-                      loadingBuilder: (
-                        context,
-                        child,
-                        loadingProgress,
-                      ) {
-                        if (loadingProgress == null) {
-                          return child;
-                        }
+                    fit: BoxFit.contain,
+                    webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) {
+                        return child;
+                      }
 
-                        return const SizedBox(
-                          height: 180,
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              color: _blue,
-                            ),
-                          ),
-                        );
-                      },
-                      errorBuilder: (
-                        context,
-                        error,
-                        stackTrace,
-                      ) {
-                        debugPrint('ERROR GAMBAR: $error');
+                      return const SizedBox(
+                        height: 180,
+                        child: Center(
+                          child: CircularProgressIndicator(color: _blue),
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      debugPrint('ERROR GAMBAR: $error');
 
-                        return const SizedBox(
-                          height: 150,
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.broken_image_rounded,
-                                  size: 42,
+                      return const SizedBox(
+                        height: 150,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.broken_image_rounded,
+                                size: 42,
+                                color: Colors.grey,
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Gambar tidak dapat dimuat',
+                                style: TextStyle(
                                   color: Colors.grey,
+                                  fontWeight: FontWeight.w600,
                                 ),
-                                SizedBox(height: 8),
-                                Text(
-                                  'Gambar tidak dapat dimuat',
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    },
                   ),
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          }),
         ],
       ),
     );
@@ -704,19 +646,15 @@ class _QuisPageState extends State<QuisPage> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: dipilih
-              ? const Color(0xFFEAF2FF)
-              : Colors.white,
+          color: dipilih ? const Color(0xFFEAF2FF) : Colors.white,
           borderRadius: BorderRadius.circular(19),
           border: Border.all(
-            color: dipilih
-                ? _blue
-                : const Color(0xFFDCE6F0),
+            color: dipilih ? _blue : const Color(0xFFDCE6F0),
             width: dipilih ? 3 : 2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.07),
+              color: Colors.black.withValues(alpha: 0.07),
               blurRadius: 5,
               offset: const Offset(0, 3),
             ),
@@ -726,14 +664,9 @@ class _QuisPageState extends State<QuisPage> {
           color: Colors.transparent,
           child: InkWell(
             borderRadius: BorderRadius.circular(17),
-            onTap: isSubmitting
-                ? null
-                : () => pilihJawaban(kode),
+            onTap: isSubmitting ? null : () => pilihJawaban(kode),
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 13,
-                vertical: 13,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 13),
               child: Row(
                 children: [
                   Container(
@@ -741,14 +674,10 @@ class _QuisPageState extends State<QuisPage> {
                     width: 43,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: dipilih
-                          ? _blue
-                          : const Color(0xFFEAF4FC),
+                      color: dipilih ? _blue : const Color(0xFFEAF4FC),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: dipilih
-                            ? Colors.white
-                            : _lightBlue,
+                        color: dipilih ? Colors.white : _lightBlue,
                         width: 2,
                       ),
                     ),
@@ -768,9 +697,7 @@ class _QuisPageState extends State<QuisPage> {
                       style: TextStyle(
                         color: const Color(0xFF263238),
                         fontSize: 15,
-                        fontWeight: dipilih
-                            ? FontWeight.w800
-                            : FontWeight.w600,
+                        fontWeight: dipilih ? FontWeight.w800 : FontWeight.w600,
                         height: 1.35,
                       ),
                     ),
@@ -778,9 +705,7 @@ class _QuisPageState extends State<QuisPage> {
                   if (audioTersedia)
                     IconButton(
                       tooltip: 'Putar audio pilihan $kode',
-                      onPressed: isSubmitting
-                          ? null
-                          : () => putarAudio(audio),
+                      onPressed: isSubmitting ? null : () => putarAudio(audio),
                       icon: const Icon(
                         Icons.volume_up_rounded,
                         color: _blue,
@@ -845,58 +770,53 @@ class _QuisPageState extends State<QuisPage> {
     return Wrap(
       spacing: 10,
       runSpacing: 10,
-      children: List.generate(
-        widget.daftarKuis.length,
-        (index) {
-          final item = widget.daftarKuis[index];
-          final aktif = index == nomorSoal;
-          final terjawab = jawabanSiswa.containsKey(item.id);
+      children: List.generate(widget.daftarKuis.length, (index) {
+        final item = widget.daftarKuis[index];
+        final aktif = index == nomorSoal;
+        final terjawab = jawabanSiswa.containsKey(item.id);
 
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            child: Material(
-              color: aktif
-                  ? _blue
-                  : terjawab
-                      ? const Color(0xFFEAF6E4)
-                      : const Color(0xFFF3F8FC),
-              shape: CircleBorder(
-                side: BorderSide(
-                  color: aktif
-                      ? Colors.white
-                      : terjawab
-                          ? _green
-                          : const Color(0xFFB9D8F2),
-                  width: aktif ? 3 : 2,
-                ),
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          child: Material(
+            color: aktif
+                ? _blue
+                : terjawab
+                ? const Color(0xFFEAF6E4)
+                : const Color(0xFFF3F8FC),
+            shape: CircleBorder(
+              side: BorderSide(
+                color: aktif
+                    ? Colors.white
+                    : terjawab
+                    ? _green
+                    : const Color(0xFFB9D8F2),
+                width: aktif ? 3 : 2,
               ),
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: isSubmitting
-                    ? null
-                    : () => pindahKeSoal(index),
-                child: SizedBox(
-                  width: 44,
-                  height: 44,
-                  child: Center(
-                    child: Text(
-                      '${index + 1}',
-                      style: TextStyle(
-                        color: aktif
-                            ? Colors.white
-                            : terjawab
-                                ? const Color(0xFF438C2D)
-                                : _blue,
-                        fontWeight: FontWeight.w900,
-                      ),
+            ),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: isSubmitting ? null : () => pindahKeSoal(index),
+              child: SizedBox(
+                width: 44,
+                height: 44,
+                child: Center(
+                  child: Text(
+                    '${index + 1}',
+                    style: TextStyle(
+                      color: aktif
+                          ? Colors.white
+                          : terjawab
+                          ? const Color(0xFF438C2D)
+                          : _blue,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
                 ),
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      }),
     );
   }
 
@@ -918,18 +838,9 @@ class _QuisPageState extends State<QuisPage> {
             spacing: 15,
             runSpacing: 8,
             children: [
-              _legend(
-                const Color(0xFF1E60BE),
-                'Sedang dibuka',
-              ),
-              _legend(
-                const Color(0xFF71BF4F),
-                'Sudah dijawab',
-              ),
-              _legend(
-                const Color(0xFFB9D8F2),
-                'Belum dijawab',
-              ),
+              _legend(const Color(0xFF1E60BE), 'Sedang dibuka'),
+              _legend(const Color(0xFF71BF4F), 'Sudah dijawab'),
+              _legend(const Color(0xFFB9D8F2), 'Belum dijawab'),
             ],
           ),
         ],
@@ -944,10 +855,7 @@ class _QuisPageState extends State<QuisPage> {
         Container(
           width: 11,
           height: 11,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 5),
         Text(
@@ -965,8 +873,7 @@ class _QuisPageState extends State<QuisPage> {
   // ================= TOMBOL NAVIGASI =================
 
   Widget tombolNavigasi() {
-    final soalTerakhir =
-        nomorSoal == widget.daftarKuis.length - 1;
+    final soalTerakhir = nomorSoal == widget.daftarKuis.length - 1;
 
     return Row(
       children: [
@@ -977,9 +884,7 @@ class _QuisPageState extends State<QuisPage> {
             backgroundColor: _lightBlue,
             foregroundColor: Colors.white,
             outlined: true,
-            onPressed: nomorSoal > 0 && !isSubmitting
-                ? soalSebelumnya
-                : null,
+            onPressed: nomorSoal > 0 && !isSubmitting ? soalSebelumnya : null,
           ),
         ),
         const SizedBox(width: 12),
@@ -994,8 +899,8 @@ class _QuisPageState extends State<QuisPage> {
             onPressed: isSubmitting
                 ? null
                 : soalTerakhir
-                    ? konfirmasiSelesai
-                    : soalSelanjutnya,
+                ? konfirmasiSelesai
+                : soalSelanjutnya,
           ),
         ),
       ],
@@ -1014,9 +919,7 @@ class _QuisPageState extends State<QuisPage> {
             'assets/images/backgroundSplash.png',
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
-              return const ColoredBox(
-                color: Color(0xFF5CB8E4),
-              );
+              return const ColoredBox(color: Color(0xFF5CB8E4));
             },
           ),
           SafeArea(
@@ -1068,9 +971,7 @@ class _QuisPageState extends State<QuisPage> {
               fit: BoxFit.cover,
               alignment: Alignment.center,
               errorBuilder: (context, error, stackTrace) {
-                return const ColoredBox(
-                  color: Color(0xFF5CB8E4),
-                );
+                return const ColoredBox(color: Color(0xFF5CB8E4));
               },
             ),
             SafeArea(
@@ -1118,24 +1019,18 @@ class _QuisPageState extends State<QuisPage> {
                 child: const Center(
                   child: Card(
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(22),
-                      ),
+                      borderRadius: BorderRadius.all(Radius.circular(22)),
                     ),
                     child: Padding(
                       padding: EdgeInsets.all(25),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          CircularProgressIndicator(
-                            color: _blue,
-                          ),
+                          CircularProgressIndicator(color: _blue),
                           SizedBox(height: 15),
                           Text(
                             'Mengirim jawaban...',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
@@ -1153,9 +1048,7 @@ class _QuisPageState extends State<QuisPage> {
 // ================= TOMBOL KEMBALI =================
 
 class _BackButton extends StatelessWidget {
-  const _BackButton({
-    required this.onPressed,
-  });
+  const _BackButton({required this.onPressed});
 
   final VoidCallback? onPressed;
 
@@ -1164,10 +1057,7 @@ class _BackButton extends StatelessWidget {
     return Material(
       color: const Color(0xFF5EBEF3),
       shape: const CircleBorder(
-        side: BorderSide(
-          color: Colors.white,
-          width: 3,
-        ),
+        side: BorderSide(color: Colors.white, width: 3),
       ),
       child: InkWell(
         customBorder: const CircleBorder(),
@@ -1188,10 +1078,7 @@ class _BackButton extends StatelessWidget {
 // ================= TOMBOL AUDIO =================
 
 class _AudioButton extends StatelessWidget {
-  const _AudioButton({
-    required this.label,
-    required this.onPressed,
-  });
+  const _AudioButton({required this.label, required this.onPressed});
 
   final String label;
   final VoidCallback onPressed;
@@ -1200,10 +1087,7 @@ class _AudioButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton.icon(
       onPressed: onPressed,
-      icon: const Icon(
-        Icons.volume_up_rounded,
-        size: 19,
-      ),
+      icon: const Icon(Icons.volume_up_rounded, size: 19),
       label: Text(
         label,
         style: const TextStyle(
@@ -1216,16 +1100,10 @@ class _AudioButton extends StatelessWidget {
         backgroundColor: const Color(0xFFEAF2FF),
         foregroundColor: const Color(0xFF1E60BE),
         elevation: 0,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 11,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(
-            color: Color(0xFF1E60BE),
-            width: 1.5,
-          ),
+          side: const BorderSide(color: Color(0xFF1E60BE), width: 1.5),
         ),
       ),
     );
@@ -1255,10 +1133,7 @@ class _NavigationButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton.icon(
       onPressed: onPressed,
-      icon: Icon(
-        icon,
-        size: 19,
-      ),
+      icon: Icon(icon, size: 19),
       label: FittedBox(
         fit: BoxFit.scaleDown,
         child: Text(
@@ -1272,16 +1147,11 @@ class _NavigationButton extends StatelessWidget {
       ),
       style: ElevatedButton.styleFrom(
         backgroundColor: outlined ? Colors.white : backgroundColor,
-        foregroundColor: outlined
-            ? const Color(0xFF1E60BE)
-            : foregroundColor,
+        foregroundColor: outlined ? const Color(0xFF1E60BE) : foregroundColor,
         disabledBackgroundColor: Colors.white54,
         disabledForegroundColor: Colors.grey,
         elevation: outlined ? 0 : 4,
-        padding: const EdgeInsets.symmetric(
-          vertical: 15,
-          horizontal: 8,
-        ),
+        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
           side: BorderSide(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_services.dart';
 import '../siswa/splash.dart';
 import 'email_verification_page.dart';
+import 'forgot_password_page.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -145,6 +146,30 @@ class _AuthPageState extends State<AuthPage> {
                   return null;
                 },
               ),
+
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: _isLoading
+                      ? null
+                      : () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ForgotPasswordPage(),
+                            ),
+                          );
+                        },
+                  child: const Text(
+                    'Lupa Password ?',
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+
               const SizedBox(height: 24),
 
               ElevatedButton(
@@ -175,6 +200,9 @@ class _AuthPageState extends State<AuthPage> {
                       ),
               ),
               SizedBox(height: 20),
+
+              Center(),
+
               Center(
                 child: Text(
                   'BUBA E-Learning Application',

@@ -13,9 +13,7 @@ class SelectContent extends StatelessWidget {
   Future<KelasModel?> _pilihKelas(BuildContext context) {
     return Navigator.push<KelasModel>(
       context,
-      MaterialPageRoute(
-        builder: (context) => const SelectClass(),
-      ),
+      MaterialPageRoute(builder: (context) => const SelectClass()),
     );
   }
 
@@ -36,9 +34,7 @@ class SelectContent extends StatelessWidget {
             fit: BoxFit.cover,
             alignment: Alignment.center,
             errorBuilder: (context, error, stackTrace) {
-              return const ColoredBox(
-                color: Color(0xFF5CB8E4),
-              );
+              return const ColoredBox(color: Color(0xFF5CB8E4));
             },
           ),
           SafeArea(
@@ -70,10 +66,7 @@ class SelectContent extends StatelessWidget {
                           ? Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.center,
-                              children: _buildCards(
-                                context,
-                                isLandscape: true,
-                              ),
+                              children: _buildCards(context, isLandscape: true),
                             )
                           : Column(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -128,10 +121,7 @@ class SelectContent extends StatelessWidget {
 
   Widget _buildHeaderTitle() {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 36,
-        vertical: 10,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 10),
       decoration: BoxDecoration(
         color: const Color(0xFF1E60BE),
         borderRadius: BorderRadius.circular(30),
@@ -156,10 +146,7 @@ class SelectContent extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildCards(
-    BuildContext context, {
-    required bool isLandscape,
-  }) {
+  List<Widget> _buildCards(BuildContext context, {required bool isLandscape}) {
     final double cardWidth = isLandscape ? 200 : 260;
     final double cardHeight = isLandscape ? 220 : 160;
 
@@ -180,6 +167,7 @@ class SelectContent extends StatelessWidget {
             context,
             MaterialPageRoute(
               builder: (context) => SelectCategoryPage(
+                kelasId: kelas.id,
                 className: kelas.namaKelas,
                 onCategorySelected: (kategori) {
                   Navigator.of(context).push(
@@ -199,10 +187,7 @@ class SelectContent extends StatelessWidget {
         },
       ),
 
-      SizedBox(
-        width: isLandscape ? 24 : 0,
-        height: isLandscape ? 0 : 20,
-      ),
+      SizedBox(width: isLandscape ? 24 : 0, height: isLandscape ? 0 : 20),
 
       _ContentMenuCard(
         title: 'KUIS',
@@ -220,6 +205,7 @@ class SelectContent extends StatelessWidget {
             context,
             MaterialPageRoute(
               builder: (context) => SelectCategoryPage(
+                kelasId: kelas.id,
                 className: kelas.namaKelas,
                 onCategorySelected: (kategori) {
                   Navigator.of(context).push(
@@ -239,10 +225,7 @@ class SelectContent extends StatelessWidget {
         },
       ),
 
-      SizedBox(
-        width: isLandscape ? 24 : 0,
-        height: isLandscape ? 0 : 20,
-      ),
+      SizedBox(width: isLandscape ? 24 : 0, height: isLandscape ? 0 : 20),
 
       _ContentMenuCard(
         title: 'RIWAYAT',
@@ -255,9 +238,7 @@ class SelectContent extends StatelessWidget {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => const RiwayatKuisPage(),
-            ),
+            MaterialPageRoute(builder: (_) => const RiwayatKuisPage()),
           );
         },
       ),
@@ -305,10 +286,7 @@ class _ContentMenuCardState extends State<_ContentMenuCard> {
         decoration: BoxDecoration(
           color: widget.color,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: Colors.white,
-            width: 4.5,
-          ),
+          border: Border.all(color: Colors.white, width: 4.5),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.25),
@@ -334,19 +312,12 @@ class _ContentMenuCardState extends State<_ContentMenuCard> {
             },
             onTap: widget.onTap,
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: widget.isLandscape
                   ? Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Expanded(
-                          child: Center(
-                            child: _buildIcon(),
-                          ),
-                        ),
+                        Expanded(child: Center(child: _buildIcon())),
                         const SizedBox(height: 8),
                         Text(
                           widget.title,
@@ -398,11 +369,7 @@ class _ContentMenuCardState extends State<_ContentMenuCard> {
       height: size,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
-        return Icon(
-          widget.fallbackIcon,
-          size: size * 0.8,
-          color: Colors.white,
-        );
+        return Icon(widget.fallbackIcon, size: size * 0.8, color: Colors.white);
       },
     );
   }

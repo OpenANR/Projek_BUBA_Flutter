@@ -63,7 +63,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
       setState(() => _isChecking = true);
     }
 
-    final isVerified = await AuthServices.checkVerificationStatus();
+    final status = await AuthServices.checkVerificationStatus();
 
     if (!mounted) return;
 
@@ -71,7 +71,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
       setState(() => _isChecking = false);
     }
 
-    if (isVerified) {
+    if (status == true) {
       _timer?.cancel();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -84,11 +84,39 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
         context,
         MaterialPageRoute(builder: (context) => const SplashPage()),
       );
-    } else if (!isAuto) {
+      return;
+    }
+
+    if (status == false) {
+      // Sesi bisa saja sudah tidak valid dan token telah dibersihkan.
+      final token = await AuthServices.getToken();
+
+      if (!mounted) return;
+
+      if (token == null || token.isEmpty) {
+        _timer?.cancel();
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const AuthPage()),
+          (route) => false,
+        );
+        return;
+      }
+    }
+
+    if (!isAuto && status == false) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
             'Email belum diverifikasi. Silakan klik tombol konfirmasi di email/Mailtrap Anda terlebih dahulu.',
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    } else if (!isAuto) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Tidak dapat memeriksa status verifikasi. Periksa koneksi internet lalu coba lagi.',
           ),
           backgroundColor: Colors.orange,
         ),
@@ -242,9 +270,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                         decoration: BoxDecoration(
                           color: const Color(0xFFEFF6FF),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: const Color(0xFFBFDBFE),
-                          ),
+                          border: Border.all(color: const Color(0xFFBFDBFE)),
                         ),
                         child: Text(
                           widget.email,
@@ -299,7 +325,9 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _isChecking ? null : () => _checkStatus(isAuto: false),
+                    onPressed: _isChecking
+                        ? null
+                        : () => _checkStatus(isAuto: false),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -319,7 +347,11 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                         : const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
+                              Icon(
+                                Icons.refresh_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              ),
                               SizedBox(width: 8),
                               Text(
                                 'SAYA SUDAH VERIFIKASI',
@@ -337,7 +369,9 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
 
                 // Tombol Kirim Ulang
                 TextButton(
-                  onPressed: (_resendCooldown > 0 || _isResending) ? null : _handleResend,
+                  onPressed: (_resendCooldown > 0 || _isResending)
+                      ? null
+                      : _handleResend,
                   child: _isResending
                       ? const Text('Mengirim ulang...')
                       : Text(
@@ -345,7 +379,9 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                               ? 'Kirim ulang email dalam ($_resendCooldown s)'
                               : 'Belum menerima email? Kirim Ulang',
                           style: TextStyle(
-                            color: _resendCooldown > 0 ? Colors.grey : Colors.blue,
+                            color: _resendCooldown > 0
+                                ? Colors.grey
+                                : Colors.blue,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -355,7 +391,11 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                 // Tombol Logout / Kembali
                 OutlinedButton.icon(
                   onPressed: _isLoggingOut ? null : _handleLogout,
-                  icon: const Icon(Icons.arrow_back_rounded, size: 18, color: Colors.grey),
+                  icon: const Icon(
+                    Icons.arrow_back_rounded,
+                    size: 18,
+                    color: Colors.grey,
+                  ),
                   label: const Text(
                     'Kembali ke Halaman Login',
                     style: TextStyle(color: Colors.grey),
@@ -365,7 +405,10 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                   ),
                 ),
               ],

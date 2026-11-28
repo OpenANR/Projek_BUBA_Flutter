@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'package:audioplayers/audioplayers.dart';
+
 import 'app_audio_player.dart';
 
 AppAudioPlayer createAudioPlayer() => MobileAudioPlayer();
@@ -25,10 +27,43 @@ class MobileAudioPlayer implements AppAudioPlayer {
     await _player.stop();
     _isPlaying = true;
     try {
-      await _player.play(UrlSource(url));
+      // Media hasil cache offline berupa path file lokal, bukan URL.
+      final source = _isLocalPath(url)
+          ? DeviceFileSource(_localFilePath(url))
+          : UrlSource(url);
+      await _player.play(source);
     } catch (_) {
       _isPlaying = false;
       rethrow;
+    }
+  }
+
+  bool _isLocalPath(String value) {
+    final path = value.trim();
+    if (path.isEmpty) return false;
+    if (path.startsWith('file://')) return true;
+    if (RegExp(r'^[a-zA-Z]:[\\/]').hasMatch(path)) return true;
+
+    const localRoots = [
+      '/data/',
+      '/storage/emulated/',
+      '/var/mobile/',
+      '/private/var/',
+      '/home/',
+      '/Users/',
+      '/tmp/',
+    ];
+
+    return localRoots.any(path.startsWith);
+  }
+
+  String _localFilePath(String value) {
+    if (!value.startsWith('file://')) return value;
+
+    try {
+      return Uri.parse(value).toFilePath();
+    } catch (_) {
+      return value;
     }
   }
 

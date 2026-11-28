@@ -87,10 +87,7 @@ void main() {
       expect(materi.id, 5);
       expect(materi.kodeMateri, 'MTR-X9Y8');
       expect(materi.namaMateri, 'Huruf Vokal');
-      expect(
-        materi.isiMateri,
-        'Huruf vokal terdiri dari A, I, U, E, dan O.',
-      );
+      expect(materi.isiMateri, 'Huruf vokal terdiri dari A, I, U, E, dan O.');
       expect(
         materi.gambarUrl,
         'http://192.168.1.14:8000/storage/materi/vokal.png',
@@ -174,6 +171,62 @@ void main() {
         materi.audioUrl,
         'http://192.168.1.14:8000/storage/audio/penjelasan.mp3',
       );
+    });
+    test('Treat absolute server storage paths as URLs, not local files', () {
+      final json = {
+        'id': 14,
+        'kode_materi': 'MTR-ABS',
+        'nama_materi': 'Test Absolute',
+        'gambar': '/storage/materi/gambar.png',
+        'audio': '/storage/audio/audio.mp3',
+      };
+
+      final materi = MateriModel.fromJson(
+        json,
+        baseUrl: 'https://buba.wstif-polije.com/api',
+      );
+
+      expect(
+        materi.gambarUrl,
+        'https://buba.wstif-polije.com/storage/materi/gambar.png',
+      );
+      expect(
+        materi.audioUrl,
+        'https://buba.wstif-polije.com/storage/audio/audio.mp3',
+      );
+      expect(
+        MateriModel.isLocalMediaPath('/storage/materi/gambar.png'),
+        isFalse,
+      );
+    });
+
+    test('Keep local cached media paths for offline mode', () {
+      final json = {
+        'id': 13,
+        'kode_materi': 'MTR-OFFLINE',
+        'nama_materi': 'Materi Offline',
+        'isi_materi': 'Isi materi offline',
+        'gambar_urls': [
+          '/data/user/0/com.example.buba/app_flutter/materi/gambar.png',
+        ],
+        'audio_url':
+            '/data/user/0/com.example.buba/app_flutter/materi/audio.mp3',
+      };
+
+      final materi = MateriModel.fromJson(
+        json,
+        baseUrl: 'https://buba.wstif-polije.com/api',
+      );
+
+      expect(
+        materi.gambarUrl,
+        '/data/user/0/com.example.buba/app_flutter/materi/gambar.png',
+      );
+      expect(
+        materi.audioUrl,
+        '/data/user/0/com.example.buba/app_flutter/materi/audio.mp3',
+      );
+      expect(MateriModel.isLocalMediaPath(materi.gambarUrl!), isTrue);
     });
   });
 }

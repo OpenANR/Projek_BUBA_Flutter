@@ -19,6 +19,7 @@ class AuthResult {
 }
 
 class AuthServices {
+  // static const String baseUrl = 'https://buba.wstif-polije.com/api';
   static const String baseUrl = 'http://192.168.1.14:8000/api';
 
   Future<AuthResult> login(String email, String password) async {
@@ -55,6 +56,9 @@ class AuthServices {
         await prefs.setString('token', token);
 
         final bool isEmailVerified = data['email_verified'] == true;
+        // Simpan status verifikasi agar aplikasi tetap bisa dibuka offline.
+        await prefs.setBool('email_verified', isEmailVerified);
+
         final userData = data['user'];
 
         if (userData != null) {
@@ -62,10 +66,7 @@ class AuthServices {
           await prefs.setString('user_data', user.toJson());
         }
 
-        return AuthResult(
-          isSuccess: true,
-          isEmailVerified: isEmailVerified,
-        );
+        return AuthResult(isSuccess: true, isEmailVerified: isEmailVerified);
       }
 
       try {
@@ -79,7 +80,8 @@ class AuthServices {
       } on FormatException {
         return AuthResult(
           isSuccess: false,
-          errorMessage: 'Login gagal (HTTP ${response.statusCode}). Periksa alamat dan port server API.',
+          errorMessage:
+              'Login gagal (HTTP ${response.statusCode}). Periksa alamat dan port server API.',
         );
       }
 
@@ -120,10 +122,15 @@ class AuthServices {
     return null;
   }
 
-  static Future<bool> checkVerificationStatus() async {
+  /// Mengembalikan status verifikasi email.
+  ///
+  /// - `true`  : email sudah diverifikasi
+  /// - `false` : email belum diverifikasi (atau sesi tidak valid)
+  /// - `null`  : status tidak dapat dipastikan, misalnya karena offline
+  static Future<bool?> checkVerificationStatus() async {
     try {
       final token = await getToken();
-      if (token == null) return false;
+      if (token == null || token.isEmpty) return null;
 
       final response = await http
           .get(
@@ -135,22 +142,41 @@ class AuthServices {
           )
           .timeout(const Duration(seconds: 10));
 
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
-        if (decoded is Map<String, dynamic> && decoded['email_verified'] == true) {
-          final userData = decoded['user'];
-          if (userData != null) {
-            final prefs = await SharedPreferences.getInstance();
-            UserModel user = UserModel.fromMap(userData);
-            await prefs.setString('user_data', user.toJson());
-          }
-          return true;
-        }
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        // Sesi sudah tidak valid. Bersihkan agar pengguna diarahkan ke login.
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('token');
+        await prefs.remove('user_data');
+        await prefs.remove('email_verified');
+        return false;
       }
-    } catch (e) {
-      print('Error checking verification status: $e');
+
+      if (response.statusCode != 200) return null;
+
+      final decoded = jsonDecode(response.body);
+      if (decoded is! Map<String, dynamic>) return null;
+
+      final verified = decoded['email_verified'] == true;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('email_verified', verified);
+
+      final userData = decoded['user'];
+      if (userData != null) {
+        final UserModel user = UserModel.fromMap(userData);
+        await prefs.setString('user_data', user.toJson());
+      }
+
+      return verified;
+    } catch (_) {
+      // Offline / server tidak dapat dihubungi.
+      return null;
     }
-    return false;
+  }
+
+  /// Status verifikasi yang tersimpan di perangkat.
+  static Future<bool?> getLocalVerificationStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('email_verified');
   }
 
   static Future<String?> resendVerificationEmail() async {
@@ -178,19 +204,20 @@ class AuthServices {
     }
   }
 
-  
   static Future<bool> logout() async {
     try {
       final token = await getToken();
 
       if (token != null) {
-        await http.post(
-          Uri.parse('$baseUrl/logout'),
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-        ).timeout(const Duration(seconds: 5));
+        await http
+            .post(
+              Uri.parse('$baseUrl/logout'),
+              headers: {
+                'Accept': 'application/json',
+                'Authorization': 'Bearer $token',
+              },
+            )
+            .timeout(const Duration(seconds: 5));
       }
     } catch (_) {
       // Logout lokal tetap dilanjutkan jika server offline.
@@ -200,6 +227,7 @@ class AuthServices {
       await clearRiwayatCache();
       await prefs.remove('token');
       await prefs.remove('user_data');
+      await prefs.remove('email_verified');
     }
 
     return true;
@@ -219,8 +247,7 @@ class AuthServices {
 
       if (user is! Map) return null;
 
-      final identitas =
-          user['id'] ?? user['kode_user'] ?? user['email'];
+      final identitas = user['id'] ?? user['kode_user'] ?? user['email'];
 
       if (identitas != null && identitas.toString().isNotEmpty) {
         return 'riwayat_kuis_${identitas.toString()}';
@@ -244,4 +271,58 @@ class AuthServices {
     }
   }
 
+  Future<AuthResult> forgotPassword(String email) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/forgot-password'),
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({'email': email}),
+          )
+          .timeout(const Duration(seconds: 15));
+
+      final decoded = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return AuthResult(
+          isSuccess: true,
+          errorMessage: decoded is Map<String, dynamic>
+              ? decoded['message']?.toString()
+              : null,
+        );
+      }
+
+      if (decoded is Map<String, dynamic> && decoded['message'] != null) {
+        return AuthResult(
+          isSuccess: false,
+          errorMessage: decoded['message'].toString(),
+        );
+      }
+
+      return AuthResult(
+        isSuccess: false,
+        errorMessage:
+            'Gagal mengirim tautan reset password (HTTP ${response.statusCode}).',
+      );
+    } on TimeoutException {
+      return AuthResult(
+        isSuccess: false,
+        errorMessage:
+            'Koneksi ke server terlalu lama. Periksa jaringan lalu coba lagi.',
+      );
+    } on FormatException {
+      return AuthResult(
+        isSuccess: false,
+        errorMessage: 'Format respon dari server tidak valid',
+      );
+    } catch (e) {
+      return AuthResult(
+        isSuccess: false,
+        errorMessage: 'Tidak bisa terhubung ke server. $e',
+      );
+    }
+  }
 }

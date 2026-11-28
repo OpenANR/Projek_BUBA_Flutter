@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../../models/materi_model.dart';
@@ -79,24 +81,16 @@ class _ListMateriPageState extends State<ListMateriPage> {
         children: [
           Align(
             alignment: Alignment.centerLeft,
-            child: _BackButton(
-              onPressed: () => Navigator.maybePop(context),
-            ),
+            child: _BackButton(onPressed: () => Navigator.maybePop(context)),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 56),
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
               decoration: BoxDecoration(
                 color: const Color(0xFF1E60BE),
                 borderRadius: BorderRadius.circular(30),
-                border: Border.all(
-                  color: Colors.white,
-                  width: 3.5,
-                ),
+                border: Border.all(color: Colors.white, width: 3.5),
                 boxShadow: const [
                   BoxShadow(
                     color: Color(0x33000000),
@@ -141,9 +135,7 @@ class _ListMateriPageState extends State<ListMateriPage> {
             fit: BoxFit.cover,
             alignment: Alignment.center,
             errorBuilder: (context, error, stackTrace) {
-              return const ColoredBox(
-                color: Color(0xFF5CB8E4),
-              );
+              return const ColoredBox(color: Color(0xFF5CB8E4));
             },
           ),
           SafeArea(
@@ -167,9 +159,7 @@ class _ListMateriPageState extends State<ListMateriPage> {
                       children: [
                         Center(
                           child: ConstrainedBox(
-                            constraints: const BoxConstraints(
-                              maxWidth: 900,
-                            ),
+                            constraints: const BoxConstraints(maxWidth: 900),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
@@ -186,10 +176,8 @@ class _ListMateriPageState extends State<ListMateriPage> {
                                 else
                                   ...List.generate(
                                     daftarMateri.length,
-                                    (index) => _buildCard(
-                                      daftarMateri[index],
-                                      index,
-                                    ),
+                                    (index) =>
+                                        _buildCard(daftarMateri[index], index),
                                   ),
                                 const SizedBox(height: 10),
                                 const Center(
@@ -236,10 +224,7 @@ class _ListMateriPageState extends State<ListMateriPage> {
           decoration: BoxDecoration(
             color: const Color(0xFF71BF4F),
             borderRadius: BorderRadius.circular(25),
-            border: Border.all(
-              color: Colors.white,
-              width: 4,
-            ),
+            border: Border.all(color: Colors.white, width: 4),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.15),
@@ -290,10 +275,7 @@ class _ListMateriPageState extends State<ListMateriPage> {
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.white,
-                    width: 2,
-                  ),
+                  border: Border.all(color: Colors.white, width: 2),
                 ),
                 child: Center(
                   child: Text(
@@ -312,17 +294,11 @@ class _ListMateriPageState extends State<ListMateriPage> {
   // KARTU INFORMASI JUMLAH MATERI
   Widget _buildInfoCard() {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 17,
-        vertical: 14,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: _green,
-          width: 2.5,
-        ),
+        border: Border.all(color: _green, width: 2.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
@@ -340,11 +316,7 @@ class _ListMateriPageState extends State<ListMateriPage> {
               color: _green.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.menu_book_rounded,
-              color: _green,
-              size: 26,
-            ),
+            child: const Icon(Icons.menu_book_rounded, color: _green, size: 26),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -364,10 +336,7 @@ class _ListMateriPageState extends State<ListMateriPage> {
                   loading
                       ? 'Sedang memuat data...'
                       : '${daftarMateri.length} materi siap dipelajari',
-                  style: const TextStyle(
-                    color: Colors.black54,
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(color: Colors.black54, fontSize: 12),
                 ),
               ],
             ),
@@ -379,12 +348,7 @@ class _ListMateriPageState extends State<ListMateriPage> {
 
   // KARTU SETIAP MATERI
   Widget _buildCard(MateriModel materi, int index) {
-    final colors = [
-      _green,
-      _blue,
-      _orange,
-      const Color(0xFFAB70D6),
-    ];
+    final colors = [_green, _blue, _orange, const Color(0xFFAB70D6)];
 
     final cardColor = colors[index % colors.length];
 
@@ -394,10 +358,7 @@ class _ListMateriPageState extends State<ListMateriPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: cardColor,
-          width: 2.5,
-        ),
+        border: Border.all(color: cardColor, width: 2.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.12),
@@ -457,28 +418,24 @@ class _ListMateriPageState extends State<ListMateriPage> {
               if (materi.gambarUrl != null && materi.gambarUrl!.isNotEmpty) ...[
                 ClipRRect(
                   borderRadius: BorderRadius.circular(14),
-                  child: Image.network(
-                    materi.gambarUrl!,
-                    width: 70,
-                    height: 70,
-                    fit: BoxFit.cover,
-                    webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: 70,
-                        height: 70,
-                        decoration: BoxDecoration(
-                          color: cardColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(14),
+                  child: MateriModel.isLocalMediaPath(materi.gambarUrl!)
+                      ? Image.file(
+                          File(MateriModel.localFilePath(materi.gambarUrl!)),
+                          width: 70,
+                          height: 70,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              _buildThumbnailError(cardColor),
+                        )
+                      : Image.network(
+                          materi.gambarUrl!,
+                          width: 70,
+                          height: 70,
+                          fit: BoxFit.cover,
+                          webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
+                          errorBuilder: (context, error, stackTrace) =>
+                              _buildThumbnailError(cardColor),
                         ),
-                        child: Icon(
-                          Icons.image_outlined,
-                          color: cardColor,
-                          size: 32,
-                        ),
-                      );
-                    },
-                  ),
                 ),
                 const SizedBox(width: 14),
               ],
@@ -511,10 +468,7 @@ class _ListMateriPageState extends State<ListMateriPage> {
             ],
           ),
           const SizedBox(height: 14),
-          const Divider(
-            color: Color(0xFFEEEEEE),
-            thickness: 1,
-          ),
+          const Divider(color: Color(0xFFEEEEEE), thickness: 1),
           const SizedBox(height: 10),
           SizedBox(
             width: double.infinity,
@@ -534,16 +488,10 @@ class _ListMateriPageState extends State<ListMateriPage> {
                   ),
                 );
               },
-              icon: const Icon(
-                Icons.menu_book_rounded,
-                size: 22,
-              ),
+              icon: const Icon(Icons.menu_book_rounded, size: 22),
               label: const Text(
                 'Mulai Belajar',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: cardColor,
@@ -552,16 +500,25 @@ class _ListMateriPageState extends State<ListMateriPage> {
                 padding: const EdgeInsets.symmetric(vertical: 13),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
-                  side: const BorderSide(
-                    color: Colors.white,
-                    width: 2,
-                  ),
+                  side: const BorderSide(color: Colors.white, width: 2),
                 ),
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildThumbnailError(Color cardColor) {
+    return Container(
+      width: 70,
+      height: 70,
+      decoration: BoxDecoration(
+        color: cardColor.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Icon(Icons.image_outlined, color: cardColor, size: 32),
     );
   }
 
@@ -576,10 +533,7 @@ class _ListMateriPageState extends State<ListMateriPage> {
             SizedBox(height: 15),
             Text(
               'Sedang memuat materi...',
-              style: TextStyle(
-                color: _darkBlue,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(color: _darkBlue, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -594,18 +548,11 @@ class _ListMateriPageState extends State<ListMateriPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(23),
-        border: Border.all(
-          color: _lightBlue,
-          width: 2,
-        ),
+        border: Border.all(color: _lightBlue, width: 2),
       ),
       child: const Column(
         children: [
-          Icon(
-            Icons.menu_book_outlined,
-            size: 55,
-            color: _blue,
-          ),
+          Icon(Icons.menu_book_outlined, size: 55, color: _blue),
           SizedBox(height: 12),
           Text(
             'Materi Belum Tersedia',
@@ -634,10 +581,7 @@ class _ListMateriPageState extends State<ListMateriPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(23),
-        border: Border.all(
-          color: Colors.redAccent,
-          width: 2,
-        ),
+        border: Border.all(color: Colors.redAccent, width: 2),
       ),
       child: Column(
         children: [

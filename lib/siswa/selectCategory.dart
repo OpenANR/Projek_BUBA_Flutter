@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../models/kategori_model.dart';
-import '../models/kelas_model.dart';
 import '../services/kategori_service.dart';
-import '../services/kelas_service.dart';
 
 class SelectCategoryPage extends StatefulWidget {
   const SelectCategoryPage({
     super.key,
+    required this.kelasId,
     required this.className,
     this.onCategorySelected,
   });
 
+  final int kelasId;
   final String className;
   final ValueChanged<KategoriModel>? onCategorySelected;
 
@@ -21,7 +21,6 @@ class SelectCategoryPage extends StatefulWidget {
 
 class _SelectCategoryPageState extends State<SelectCategoryPage> {
   final KategoriService _kategoriService = KategoriService();
-  final KelasService _kelasService = KelasService();
   late Future<List<KategoriModel>> _kategoriFuture;
 
   @override
@@ -30,35 +29,8 @@ class _SelectCategoryPageState extends State<SelectCategoryPage> {
     _kategoriFuture = _loadKategori();
   }
 
-  Future<List<KategoriModel>> _loadKategori() async {
-    final classes = await _kelasService.getKelasSiswa();
-    final requested = widget.className.trim().toLowerCase();
-
-    if (requested.isEmpty) {
-      throw const KategoriServiceException('Nama kelas tidak valid.');
-    }
-
-    KelasModel? exactMatch;
-    KelasModel? partialMatch;
-    for (final kelas in classes) {
-      final name = kelas.namaKelas.trim().toLowerCase();
-      if (name == requested) {
-        exactMatch = kelas;
-        break;
-      }
-      if (partialMatch == null && name.endsWith(requested)) {
-        partialMatch = kelas;
-      }
-    }
-
-    final selected = exactMatch ?? partialMatch;
-    if (selected == null) {
-      throw KategoriServiceException(
-        'Kelas ${widget.className} tidak ditemukan dari API.',
-      );
-    }
-
-    return _kategoriService.getKategori(kelasId: selected.id);
+  Future<List<KategoriModel>> _loadKategori() {
+    return _kategoriService.getKategori(kelasId: widget.kelasId);
   }
 
   void _reloadKategori() {
